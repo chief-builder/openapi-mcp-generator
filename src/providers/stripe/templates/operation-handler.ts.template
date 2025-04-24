@@ -1,0 +1,12 @@
+  /**
+   * ${description}
+   */
+  private async ${methodName}(params: any, authContext?: IMCPAuthContext): Promise<any> {
+    const stripe = this.getStripeClient(authContext);
+    
+    try {
+${operationCode}
+    } catch (error) {
+      throw this.transformStripeError(error);
+    }
+  }

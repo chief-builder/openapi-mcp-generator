@@ -1,0 +1,11 @@
+  private handleToolsList(request: IMCPRequest): IMCPResponse {
+    const tools = ${toolsJson};
+    
+    return {
+      jsonrpc: '2.0',
+      id: request.id,
+      result: {
+        tools
+      }
+    };
+  }

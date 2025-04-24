@@ -1,0 +1,2 @@
+      const ${resource} = await stripe.${resource}.retrieve(params.id);
+      return ${resource};

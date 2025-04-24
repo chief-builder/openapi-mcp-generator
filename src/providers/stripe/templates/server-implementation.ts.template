@@ -1,0 +1,331 @@
+// @ts-nocheck
+/**
+ * ${serverName} MCP Server Implementation
+ */
+
+import { MCPServerBase, IMCPServerConfig, IMCPRequest, IMCPResponse, IMCPTool, IMCPToolCallRequest, MCPCapabilityType, IMCPAuthContext } from './mcp-types';
+import { StripeAuthProvider } from './stripe-auth-provider';
+import { StripeClient, StripeCustomer, StripeCharge, StripeError, StripeResourceHelper, STRIPE_RESOURCE_MAP, STRIPE_METHOD_MAP } from './stripe-types';
+import * as http from 'http';
+import Stripe from 'stripe';
+
+/**
+ * Helper class for working with Stripe resources
+ * Provides a compatibility layer between OpenAPI spec and Stripe SDK
+ * Uses type assertions to bypass TypeScript type checking for Stripe SDK access
+ */
+class StripeResourceHelperImpl implements StripeResourceHelper {
+  private stripe: any; // Use any type to bypass TypeScript type checking
+
+  constructor(stripe: StripeClient) {
+    // Store the stripe client as 'any' to allow dynamic property access
+    this.stripe = stripe as any;
+  }
+
+  /**
+   * Get a Stripe resource by name, handling naming differences
+   * 
+   * @param resourceName The resource name (e.g., 'account_links', 'customers')
+   * @returns The Stripe resource or undefined if not found
+   */
+  getResource(resourceName: string): any {
+    // Map from API resource name to SDK resource name
+    const sdkResourceName = this.mapResourceName(resourceName);
+    
+    // Access the resource dynamically
+    return this.stripe[sdkResourceName];
+  }
+
+  /**
+   * Execute a method on a Stripe resource
+   * 
+   * @param resourceName The resource name (e.g., 'customers')
+   * @param methodName The method name (e.g., 'create', 'list')
+   * @param args Arguments to pass to the method
+   * @returns The result of the method call
+   */
+  async executeMethod(resourceName: string, methodName: string, ...args: any[]): Promise<any> {
+    try {
+      const resource = this.getResource(resourceName);
+      
+      if (!resource) {
+        throw new Error('Resource not found: ' + resourceName);
+      }
+      
+      // Map API method name to SDK method name
+      const sdkMethodName = this.mapMethodName(resourceName, methodName);
+      
+      if (typeof resource[sdkMethodName] !== 'function') {
+        throw new Error('Method not found: ' + resourceName + '.' + sdkMethodName);
+      }
+      
+      return await resource[sdkMethodName](...args);
+    } catch (error) {
+      console.error('Error executing Stripe method: ' + resourceName + '.' + methodName, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Map an API resource name to the corresponding SDK resource name
+   * 
+   * @param apiResourceName The resource name from the API spec
+   * @returns The SDK resource name
+   */
+  mapResourceName(apiResourceName: string): string {
+    // Check if we have a specific mapping for this resource
+    if (apiResourceName in STRIPE_RESOURCE_MAP) {
+      return STRIPE_RESOURCE_MAP[apiResourceName];
+    }
+    
+    // Special case for singular "account" (Stripe uses "accounts")
+    if (apiResourceName === 'account') {
+      return 'accounts';
+    }
+    
+    // Otherwise, use the resource name as-is
+    return apiResourceName;
+  }
+
+  /**
+   * Map an API method name to the corresponding SDK method name
+   * 
+   * @param resourceName The resource name
+   * @param apiMethodName The method name from the API spec
+   * @returns The SDK method name
+   */
+  mapMethodName(resourceName: string, apiMethodName: string): string {
+    // Check if we have a specific mapping for this method
+    if (apiMethodName in STRIPE_METHOD_MAP) {
+      return STRIPE_METHOD_MAP[apiMethodName];
+    }
+    
+    // Otherwise, use the method name as-is
+    return apiMethodName;
+  }
+}
+
+/**
+ * Configuration for the Stripe MCP server
+ */
+export interface I${serverClassName}Config {
+  apiKey?: string;
+  transport?: 'http' | 'stdio';
+  httpPort?: number;
+  stripeApiVersion?: string;
+  [key: string]: any;
+}
+
+/**
+ * Stripe MCP Server implementation
+ */
+export class ${serverClassName} extends MCPServerBase {
+  private server: http.Server | null = null;
+  private authProvider: StripeAuthProvider;
+  private stripe: StripeClient | null = null; // Stripe client
+  private stripeHelper: StripeResourceHelperImpl | null = null; // Stripe resource helper
+
+  /**
+   * Create a new Stripe MCP server
+   * 
+   * @param config Server configuration
+   */
+  constructor(config: I${serverClassName}Config) {
+    // Create base MCP server configuration
+    const mcpConfig: IMCPServerConfig = {
+      serverName: '${serverName}',
+      serverVersion: '${serverVersion}',
+      serverDescription: '${serverDescription}',
+      transport: config.transport || 'http',
+      httpPort: config.httpPort || 8080
+    };
+
+    // Call parent constructor
+    super(mcpConfig);
+
+    // Initialize auth provider
+    this.authProvider = new StripeAuthProvider(config);
+    
+    // Initialize Stripe client if API key is available
+    if (config.apiKey) {
+      this.initializeStripeClient(config.apiKey, config.stripeApiVersion);
+    }
+  }
+
+  public async start(): Promise<void> {
+    if (this.config.transport === 'http') {
+      await this.startHttpServer();
+    } else {
+      await this.startStdioServer();
+    }
+  }
+
+  public async stop(): Promise<void> {
+    if (this.server) {
+      return new Promise((resolve, reject) => {
+        this.server?.close((err) => {
+          if (err) {
+            reject(err);
+          } else {
+            this.server = null;
+            resolve();
+          }
+        });
+      });
+    }
+  }
+
+  private async startHttpServer(): Promise<void> {
+    return new Promise((resolve) => {
+      this.server = http.createServer(async (req, res) => {
+        // Enable CORS
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        
+        // Handle preflight requests
+        if (req.method === 'OPTIONS') {
+          res.statusCode = 204;
+          res.end();
+          return;
+        }
+        
+        // Only accept POST requests
+        if (req.method !== 'POST') {
+          res.statusCode = 405;
+          res.end(JSON.stringify({ error: 'Method not allowed' }));
+          return;
+        }
+        
+        try {
+          // Read request body
+          const chunks: Buffer[] = [];
+          for await (const chunk of req) {
+            chunks.push(Buffer.from(chunk));
+          }
+          const body = Buffer.concat(chunks).toString('utf8');
+          
+          // Parse request
+          const requestData = JSON.parse(body) as IMCPRequest;
+          
+          // Process request
+          const response = await this.handleRequest(requestData, req.headers);
+          
+          // Send response
+          res.setHeader('Content-Type', 'application/json');
+          res.statusCode = 200;
+          res.end(JSON.stringify(response));
+        } catch (error) {
+          // Handle errors
+          res.statusCode = 500;
+          res.end(JSON.stringify({
+            jsonrpc: '2.0',
+            id: null,
+            error: {
+              code: -32603,
+              message: 'Internal error',
+              data: { message: (error as Error).message }
+            }
+          }));
+        }
+      });
+      
+      // Start server
+      const port = this.config.httpPort || 8080;
+      this.server.listen(port, () => {
+        console.log('[StripeServer] HTTP server listening on port ' + port);
+        resolve();
+      });
+    });
+  }
+
+  private async startStdioServer(): Promise<void> {
+    console.log('[StripeServer] STDIO transport not yet implemented');
+    return Promise.resolve();
+  }
+
+  private async handleRequest(request: IMCPRequest, headers?: http.IncomingHttpHeaders): Promise<IMCPResponse> {
+    // Validate JSON-RPC request
+    if (request.jsonrpc !== '2.0') {
+      return {
+        jsonrpc: '2.0',
+        id: request.id,
+        error: {
+          code: -32600,
+          message: 'Invalid request',
+          data: { message: 'Invalid JSON-RPC version' }
+        }
+      };
+    }
+    
+    try {
+      // Authenticate request
+      if (headers && headers.authorization) {
+        request.headers = { authorization: headers.authorization as string };
+      }
+      
+      const authContext = await this.authProvider.authenticate(request);
+      request.authContext = authContext || undefined;
+      
+      // Handle different methods
+      switch (request.method) {
+        case 'server.info':
+          return this.handleServerInfo(request);
+        case 'tools.list':
+          return this.handleToolsList(request);
+        case 'tools.call':
+          return await this.handleToolsCall(request);
+        case 'lifecycle.status':
+          return this.handleLifecycleStatus(request);
+        default:
+          return {
+            jsonrpc: '2.0',
+            id: request.id,
+            error: {
+              code: -32601,
+              message: 'Method not found',
+              data: { method: request.method }
+            }
+          };
+      }
+    } catch (error) {
+      return {
+        jsonrpc: '2.0',
+        id: request.id,
+        error: {
+          code: -32603,
+          message: 'Internal error',
+          data: { message: (error as Error).message }
+        }
+      };
+    }
+  }
+
+  private handleServerInfo(request: IMCPRequest): IMCPResponse {
+    return {
+      jsonrpc: '2.0',
+      id: request.id,
+      result: {
+        name: this.config.serverName,
+        version: this.config.serverVersion,
+        description: this.config.serverDescription
+      }
+    };
+  }
+  
+  ${toolsListHandlerPlaceholder}
+  
+  ${toolCallHandlerPlaceholder}
+
+  private handleLifecycleStatus(request: IMCPRequest): IMCPResponse {
+    return {
+      jsonrpc: '2.0',
+      id: request.id,
+      result: {
+        status: 'running'
+      }
+    };
+  }
+  
+  ${handlersPlaceholder}
+}

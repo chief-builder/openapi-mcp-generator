@@ -1,0 +1,3 @@
+      const { id, ...updateParams } = params;
+      const ${resource} = await stripe.${resource}.update(id, updateParams);
+      return ${resource};

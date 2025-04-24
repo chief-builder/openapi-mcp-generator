@@ -1,0 +1,2 @@
+      const ${resource} = await stripe.${resource}.create(params);
+      return ${resource};

@@ -1,0 +1,6 @@
+      // Handle ${operation} operation for ${resource}
+      if (stripe.${resource} && stripe.${resource}.${operation}) {
+        return await stripe.${resource}.${operation}(params);
+      } else {
+        throw new Error('Operation not supported');
+      }

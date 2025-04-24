@@ -1,0 +1,32 @@
+/**
+ * ${providerName} MCP Server
+ * 
+ * This module exports the ${providerName} MCP server and related types.
+ */
+
+export * from './mcp-types';
+export * from './${authProviderName}';
+export * from './${serverFileName}';
+
+import { ${serverClassName} } from './${serverFileName}';
+
+// Create and start server if this module is run directly
+if (require.main === module) {
+  // Load configuration from environment variables
+  const config = {
+    httpPort: parseInt(process.env.PORT || '8080', 10),
+    apiKey: process.env.API_KEY,
+    transport: (process.env.TRANSPORT || 'http') as 'http' | 'stdio'
+  };
+
+  const server = new ${serverClassName}({
+    transport: config.transport,
+    httpPort: config.httpPort,
+    apiKey: config.apiKey
+  });
+
+  server.start().catch((error: Error) => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });
+}

@@ -1,0 +1,61 @@
+# ${serverName}
+
+${serverDescription}
+
+This is a Model Context Protocol (MCP) server for the ${apiTitle} API, generated from an OpenAPI specification.
+
+## Installation
+
+```bash
+npm install
+npm run build
+```
+
+## Usage
+
+### Environment Variables
+
+- `API_KEY`: Your API key (optional if providing in requests)
+- `PORT`: Port to run the server on (default: 8080)
+- `TRANSPORT`: Transport method to use ('http' or 'stdio', default: 'http')
+
+### Starting the Server
+
+```bash
+npm start
+```
+
+Or with environment variables:
+
+```bash
+API_KEY=your_api_key PORT=8080 npm start
+```
+
+### Using the CLI
+
+```bash
+# Install globally
+npm install -g .
+
+# Run the server
+${serverName} --port=8080 --apiKey=your_api_key
+```
+
+## Available Tools
+
+This MCP server exposes the following API endpoints as MCP tools:
+
+${toolsList}
+${toolsExtra}
+
+## Authentication
+
+${authDoc}
+
+## Example Requests
+
+${exampleRequests}
+
+## License
+
+MIT
