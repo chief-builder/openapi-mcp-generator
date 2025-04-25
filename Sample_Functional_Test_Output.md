@@ -25,565 +25,565 @@ found 0 vulnerabilities
     Server name: stripe-mcp
     Server version: 1.0.0
 
-    Test 2: List tools
-    Found 557 tools
-    'Tool 1: getAccount
-    Tool 2: postAccountLinks
-    Tool 3: postAccountSessions
-    Tool 4: getAccounts
-    Tool 5: postAccounts
-    Tool 6: deleteAccountsAccount
-    Tool 7: getAccountsAccount
-    Tool 8: postAccountsAccount
-    Tool 9: postAccountsAccountBankAccounts
-    Tool 10: deleteAccountsAccountBankAccountsId
-    Tool 11: getAccountsAccountBankAccountsId
-    Tool 12: postAccountsAccountBankAccountsId
-    Tool 13: getAccountsAccountCapabilities
-    Tool 14: getAccountsAccountCapabilitiesCapability
-    Tool 15: postAccountsAccountCapabilitiesCapability
-    Tool 16: getAccountsAccountExternalAccounts
-    Tool 17: postAccountsAccountExternalAccounts
-    Tool 18: deleteAccountsAccountExternalAccountsId
-    Tool 19: getAccountsAccountExternalAccountsId
-    Tool 20: postAccountsAccountExternalAccountsId
-    Tool 21: postAccountsAccountLoginLinks
-    Tool 22: getAccountsAccountPeople
-    Tool 23: postAccountsAccountPeople
-    Tool 24: deleteAccountsAccountPeoplePerson
-    Tool 25: getAccountsAccountPeoplePerson
-    Tool 26: postAccountsAccountPeoplePerson
-    Tool 27: getAccountsAccountPersons
-    Tool 28: postAccountsAccountPersons
-    Tool 29: deleteAccountsAccountPersonsPerson
-    Tool 30: getAccountsAccountPersonsPerson
-    Tool 31: postAccountsAccountPersonsPerson
-    Tool 32: postAccountsAccountReject
-    Tool 33: getApplePayDomains
-    Tool 34: postApplePayDomains
-    Tool 35: deleteApplePayDomainsDomain
-    Tool 36: getApplePayDomainsDomain
-    Tool 37: getApplicationFees
-    Tool 38: getApplicationFeesFeeRefundsId
-    Tool 39: postApplicationFeesFeeRefundsId
-    Tool 40: getApplicationFeesId
-    Tool 41: postApplicationFeesIdRefund
-    Tool 42: getApplicationFeesIdRefunds
-    Tool 43: postApplicationFeesIdRefunds
-    Tool 44: getAppsSecrets
-    Tool 45: postAppsSecrets
-    Tool 46: postAppsSecretsDelete
-    Tool 47: getAppsSecretsFind
-    Tool 48: getBalance
-    Tool 49: getBalanceHistory
-    Tool 50: getBalanceHistoryId
-    Tool 51: getBalanceTransactions
-    Tool 52: getBalanceTransactionsId
-    Tool 53: getBillingAlerts
-    Tool 54: postBillingAlerts
-    Tool 55: getBillingAlertsId
-    Tool 56: postBillingAlertsIdActivate
-    Tool 57: postBillingAlertsIdArchive
-    Tool 58: postBillingAlertsIdDeactivate
-    Tool 59: getBillingCreditBalanceSummary
-    Tool 60: getBillingCreditBalanceTransactions
-    Tool 61: getBillingCreditBalanceTransactionsId
-    Tool 62: getBillingCreditGrants
-    Tool 63: postBillingCreditGrants
-    Tool 64: getBillingCreditGrantsId
-    Tool 65: postBillingCreditGrantsId
-    Tool 66: postBillingCreditGrantsIdExpire
-    Tool 67: postBillingCreditGrantsIdVoid
-    Tool 68: postBillingMeterEventAdjustments
-    Tool 69: postBillingMeterEvents
-    Tool 70: getBillingMeters
-    Tool 71: postBillingMeters
-    Tool 72: getBillingMetersId
-    Tool 73: postBillingMetersId
-    Tool 74: postBillingMetersIdDeactivate
-    Tool 75: getBillingMetersIdEventSummaries
-    Tool 76: postBillingMetersIdReactivate
-    Tool 77: getBillingPortalConfigurations
-    Tool 78: postBillingPortalConfigurations
-    Tool 79: getBillingPortalConfigurationsConfiguration
-    Tool 80: postBillingPortalConfigurationsConfiguration
-    Tool 81: postBillingPortalSessions
-    Tool 82: getCharges
-    Tool 83: postCharges
-    Tool 84: getChargesSearch
-    Tool 85: getChargesCharge
-    Tool 86: postChargesCharge
-    Tool 87: postChargesChargeCapture
-    Tool 88: getChargesChargeDispute
-    Tool 89: postChargesChargeDispute
-    Tool 90: postChargesChargeDisputeClose
-    Tool 91: postChargesChargeRefund
-    Tool 92: getChargesChargeRefunds
-    Tool 93: postChargesChargeRefunds
-    Tool 94: getChargesChargeRefundsRefund
-    Tool 95: postChargesChargeRefundsRefund
-    Tool 96: getCheckoutSessions
-    Tool 97: postCheckoutSessions
-    Tool 98: getCheckoutSessionsSession
-    Tool 99: postCheckoutSessionsSession
-    Tool 100: postCheckoutSessionsSessionExpire
-    Tool 101: getCheckoutSessionsSessionLineItems
-    Tool 102: getClimateOrders
-    Tool 103: postClimateOrders
-    Tool 104: getClimateOrdersOrder
-    Tool 105: postClimateOrdersOrder
-    Tool 106: postClimateOrdersOrderCancel
-    Tool 107: getClimateProducts
-    Tool 108: getClimateProductsProduct
-    Tool 109: getClimateSuppliers
-    Tool 110: getClimateSuppliersSupplier
-    Tool 111: getConfirmationTokensConfirmationToken
-    Tool 112: getCountrySpecs
-    Tool 113: getCountrySpecsCountry
-    Tool 114: getCoupons
-    Tool 115: postCoupons
-    Tool 116: deleteCouponsCoupon
-    Tool 117: getCouponsCoupon
-    Tool 118: postCouponsCoupon
-    Tool 119: getCreditNotes
-    Tool 120: postCreditNotes
-    Tool 121: getCreditNotesPreview
-    Tool 122: getCreditNotesPreviewLines
-    Tool 123: getCreditNotesCreditNoteLines
-    Tool 124: getCreditNotesId
-    Tool 125: postCreditNotesId
-    Tool 126: postCreditNotesIdVoid
-    Tool 127: postCustomerSessions
-    Tool 128: getCustomers
-    Tool 129: postCustomers
-    Tool 130: getCustomersSearch
-    Tool 131: deleteCustomersCustomer
-    Tool 132: getCustomersCustomer
-    Tool 133: postCustomersCustomer
-    Tool 134: getCustomersCustomerBalanceTransactions
-    Tool 135: postCustomersCustomerBalanceTransactions
-    Tool 136: getCustomersCustomerBalanceTransactionsTransaction
-    Tool 137: postCustomersCustomerBalanceTransactionsTransaction
-    Tool 138: postCustomersCustomerBankAccounts
-    Tool 139: deleteCustomersCustomerBankAccountsId
-    Tool 140: postCustomersCustomerBankAccountsId
-    Tool 141: postCustomersCustomerBankAccountsIdVerify
-    Tool 142: postCustomersCustomerCards
-    Tool 143: deleteCustomersCustomerCardsId
-    Tool 144: postCustomersCustomerCardsId
-    Tool 145: getCustomersCustomerCashBalance
-    Tool 146: postCustomersCustomerCashBalance
-    Tool 147: getCustomersCustomerCashBalanceTransactions
-    Tool 148: getCustomersCustomerCashBalanceTransactionsTransaction
-    Tool 149: deleteCustomersCustomerDiscount
-    Tool 150: getCustomersCustomerDiscount
-    Tool 151: postCustomersCustomerFundingInstructions
-    Tool 152: getCustomersCustomerPaymentMethods
-    Tool 153: getCustomersCustomerPaymentMethodsPaymentMethod
-    Tool 154: getCustomersCustomerSources
-    Tool 155: postCustomersCustomerSources
-    Tool 156: deleteCustomersCustomerSourcesId
-    Tool 157: getCustomersCustomerSourcesId
-    Tool 158: postCustomersCustomerSourcesId
-    Tool 159: postCustomersCustomerSourcesIdVerify
-    Tool 160: getCustomersCustomerSubscriptions
-    Tool 161: postCustomersCustomerSubscriptions
-    Tool 162: deleteCustomersCustomerSubscriptionsSubscriptionExposedId
-    Tool 163: getCustomersCustomerSubscriptionsSubscriptionExposedId
-    Tool 164: postCustomersCustomerSubscriptionsSubscriptionExposedId
-    Tool 165: deleteCustomersCustomerSubscriptionsSubscriptionExposedIdDiscount
-    Tool 166: getCustomersCustomerSubscriptionsSubscriptionExposedIdDiscount
-    Tool 167: getCustomersCustomerTaxIds
-    Tool 168: postCustomersCustomerTaxIds
-    Tool 169: deleteCustomersCustomerTaxIdsId
-    Tool 170: getCustomersCustomerTaxIdsId
-    Tool 171: getDisputes
-    Tool 172: getDisputesDispute
-    Tool 173: postDisputesDispute
-    Tool 174: postDisputesDisputeClose
-    Tool 175: getEntitlementsActiveEntitlements
-    Tool 176: getEntitlementsActiveEntitlementsId
-    Tool 177: getEntitlementsFeatures
-    Tool 178: postEntitlementsFeatures
-    Tool 179: getEntitlementsFeaturesId
-    Tool 180: postEntitlementsFeaturesId
-    Tool 181: postEphemeralKeys
-    Tool 182: deleteEphemeralKeysKey
-    Tool 183: getEvents
-    Tool 184: getEventsId
-    Tool 185: getExchangeRates
-    Tool 186: getExchangeRatesRateId
-    Tool 187: postExternalAccountsId
-    Tool 188: getFileLinks
-    Tool 189: postFileLinks
-    Tool 190: getFileLinksLink
-    Tool 191: postFileLinksLink
-    Tool 192: getFiles
-    Tool 193: postFiles
-    Tool 194: getFilesFile
-    Tool 195: getFinancialConnectionsAccounts
-    Tool 196: getFinancialConnectionsAccountsAccount
-    Tool 197: postFinancialConnectionsAccountsAccountDisconnect
-    Tool 198: getFinancialConnectionsAccountsAccountOwners
-    Tool 199: postFinancialConnectionsAccountsAccountRefresh
-    Tool 200: postFinancialConnectionsAccountsAccountSubscribe
-    Tool 201: postFinancialConnectionsAccountsAccountUnsubscribe
-    Tool 202: postFinancialConnectionsSessions
-    Tool 203: getFinancialConnectionsSessionsSession
-    Tool 204: getFinancialConnectionsTransactions
-    Tool 205: getFinancialConnectionsTransactionsTransaction
-    Tool 206: getForwardingRequests
-    Tool 207: postForwardingRequests
-    Tool 208: getForwardingRequestsId
-    Tool 209: getIdentityVerificationReports
-    Tool 210: getIdentityVerificationReportsReport
-    Tool 211: getIdentityVerificationSessions
-    Tool 212: postIdentityVerificationSessions
-    Tool 213: getIdentityVerificationSessionsSession
-    Tool 214: postIdentityVerificationSessionsSession
-    Tool 215: postIdentityVerificationSessionsSessionCancel
-    Tool 216: postIdentityVerificationSessionsSessionRedact
-    Tool 217: getInvoicePayments
-    Tool 218: getInvoicePaymentsInvoicePayment
-    Tool 219: getInvoiceRenderingTemplates
-    Tool 220: getInvoiceRenderingTemplatesTemplate
-    Tool 221: postInvoiceRenderingTemplatesTemplateArchive
-    Tool 222: postInvoiceRenderingTemplatesTemplateUnarchive
-    Tool 223: getInvoiceitems
-    Tool 224: postInvoiceitems
-    Tool 225: deleteInvoiceitemsInvoiceitem
-    Tool 226: getInvoiceitemsInvoiceitem
-    Tool 227: postInvoiceitemsInvoiceitem
-    Tool 228: getInvoices
-    Tool 229: postInvoices
-    Tool 230: postInvoicesCreatePreview
-    Tool 231: getInvoicesSearch
-    Tool 232: deleteInvoicesInvoice
-    Tool 233: getInvoicesInvoice
-    Tool 234: postInvoicesInvoice
-    Tool 235: postInvoicesInvoiceAddLines
-    Tool 236: postInvoicesInvoiceFinalize
-    Tool 237: getInvoicesInvoiceLines
-    Tool 238: postInvoicesInvoiceLinesLineItemId
-    Tool 239: postInvoicesInvoiceMarkUncollectible
-    Tool 240: postInvoicesInvoicePay
-    Tool 241: postInvoicesInvoiceRemoveLines
-    Tool 242: postInvoicesInvoiceSend
-    Tool 243: postInvoicesInvoiceUpdateLines
-    Tool 244: postInvoicesInvoiceVoid
-    Tool 245: getIssuingAuthorizations
-    Tool 246: getIssuingAuthorizationsAuthorization
-    Tool 247: postIssuingAuthorizationsAuthorization
-    Tool 248: getIssuingCardholders
-    Tool 249: postIssuingCardholders
-    Tool 250: getIssuingCardholdersCardholder
-    Tool 251: postIssuingCardholdersCardholder
-    Tool 252: getIssuingCards
-    Tool 253: postIssuingCards
-    Tool 254: getIssuingCardsCard
-    Tool 255: postIssuingCardsCard
-    Tool 256: getIssuingDisputes
-    Tool 257: postIssuingDisputes
-    Tool 258: getIssuingDisputesDispute
-    Tool 259: postIssuingDisputesDispute
-    Tool 260: postIssuingDisputesDisputeSubmit
-    Tool 261: getIssuingPersonalizationDesigns
-    Tool 262: postIssuingPersonalizationDesigns
-    Tool 263: getIssuingPersonalizationDesignsPersonalizationDesign
-    Tool 264: postIssuingPersonalizationDesignsPersonalizationDesign
-    Tool 265: getIssuingPhysicalBundles
-    Tool 266: getIssuingPhysicalBundlesPhysicalBundle
-    Tool 267: getIssuingSettlementsSettlement
-    Tool 268: postIssuingSettlementsSettlement
-    Tool 269: getIssuingTokens
-    Tool 270: getIssuingTokensToken
-    Tool 271: postIssuingTokensToken
-    Tool 272: getIssuingTransactions
-    Tool 273: getIssuingTransactionsTransaction
-    Tool 274: postIssuingTransactionsTransaction
-    Tool 275: postLinkAccountSessions
-    Tool 276: getLinkAccountSessionsSession
-    Tool 277: getLinkedAccounts
-    Tool 278: getLinkedAccountsAccount
-    Tool 279: postLinkedAccountsAccountDisconnect
-    Tool 280: getLinkedAccountsAccountOwners
-    Tool 281: postLinkedAccountsAccountRefresh
-    Tool 282: getMandatesMandate
-    Tool 283: getPaymentIntents
-    Tool 284: postPaymentIntents
-    Tool 285: getPaymentIntentsSearch
-    Tool 286: getPaymentIntentsIntent
-    Tool 287: postPaymentIntentsIntent
-    Tool 288: postPaymentIntentsIntentApplyCustomerBalance
-    Tool 289: postPaymentIntentsIntentCancel
-    Tool 290: postPaymentIntentsIntentCapture
-    Tool 291: postPaymentIntentsIntentConfirm
-    Tool 292: postPaymentIntentsIntentIncrementAuthorization
-    Tool 293: postPaymentIntentsIntentVerifyMicrodeposits
-    Tool 294: getPaymentLinks
-    Tool 295: postPaymentLinks
-    Tool 296: getPaymentLinksPaymentLink
-    Tool 297: postPaymentLinksPaymentLink
-    Tool 298: getPaymentLinksPaymentLinkLineItems
-    Tool 299: getPaymentMethodConfigurations
-    Tool 300: postPaymentMethodConfigurations
-    Tool 301: getPaymentMethodConfigurationsConfiguration
-    Tool 302: postPaymentMethodConfigurationsConfiguration
-    Tool 303: getPaymentMethodDomains
-    Tool 304: postPaymentMethodDomains
-    Tool 305: getPaymentMethodDomainsPaymentMethodDomain
-    Tool 306: postPaymentMethodDomainsPaymentMethodDomain
-    Tool 307: postPaymentMethodDomainsPaymentMethodDomainValidate
-    Tool 308: getPaymentMethods
-    Tool 309: postPaymentMethods
-    Tool 310: getPaymentMethodsPaymentMethod
-    Tool 311: postPaymentMethodsPaymentMethod
-    Tool 312: postPaymentMethodsPaymentMethodAttach
-    Tool 313: postPaymentMethodsPaymentMethodDetach
-    Tool 314: getPayouts
-    Tool 315: postPayouts
-    Tool 316: getPayoutsPayout
-    Tool 317: postPayoutsPayout
-    Tool 318: postPayoutsPayoutCancel
-    Tool 319: postPayoutsPayoutReverse
-    Tool 320: getPlans
-    Tool 321: postPlans
-    Tool 322: deletePlansPlan
-    Tool 323: getPlansPlan
-    Tool 324: postPlansPlan
-    Tool 325: getPrices
-    Tool 326: postPrices
-    Tool 327: getPricesSearch
-    Tool 328: getPricesPrice
-    Tool 329: postPricesPrice
-    Tool 330: getProducts
-    Tool 331: postProducts
-    Tool 332: getProductsSearch
-    Tool 333: deleteProductsId
-    Tool 334: getProductsId
-    Tool 335: postProductsId
-    Tool 336: getProductsProductFeatures
-    Tool 337: postProductsProductFeatures
-    Tool 338: deleteProductsProductFeaturesId
-    Tool 339: getProductsProductFeaturesId
-    Tool 340: getPromotionCodes
-    Tool 341: postPromotionCodes
-    Tool 342: getPromotionCodesPromotionCode
-    Tool 343: postPromotionCodesPromotionCode
-    Tool 344: getQuotes
-    Tool 345: postQuotes
-    Tool 346: getQuotesQuote
-    Tool 347: postQuotesQuote
-    Tool 348: postQuotesQuoteAccept
-    Tool 349: postQuotesQuoteCancel
-    Tool 350: getQuotesQuoteComputedUpfrontLineItems
-    Tool 351: postQuotesQuoteFinalize
-    Tool 352: getQuotesQuoteLineItems
-    Tool 353: getQuotesQuotePdf
-    Tool 354: getRadarEarlyFraudWarnings
-    Tool 355: getRadarEarlyFraudWarningsEarlyFraudWarning
-    Tool 356: getRadarValueListItems
-    Tool 357: postRadarValueListItems
-    Tool 358: deleteRadarValueListItemsItem
-    Tool 359: getRadarValueListItemsItem
-    Tool 360: getRadarValueLists
-    Tool 361: postRadarValueLists
-    Tool 362: deleteRadarValueListsValueList
-    Tool 363: getRadarValueListsValueList
-    Tool 364: postRadarValueListsValueList
-    Tool 365: getRefunds
-    Tool 366: postRefunds
-    Tool 367: getRefundsRefund
-    Tool 368: postRefundsRefund
-    Tool 369: postRefundsRefundCancel
-    Tool 370: getReportingReportRuns
-    Tool 371: postReportingReportRuns
-    Tool 372: getReportingReportRunsReportRun
-    Tool 373: getReportingReportTypes
-    Tool 374: getReportingReportTypesReportType
-    Tool 375: getReviews
-    Tool 376: getReviewsReview
-    Tool 377: postReviewsReviewApprove
-    Tool 378: getSetupAttempts
-    Tool 379: getSetupIntents
-    Tool 380: postSetupIntents
-    Tool 381: getSetupIntentsIntent
-    Tool 382: postSetupIntentsIntent
-    Tool 383: postSetupIntentsIntentCancel
-    Tool 384: postSetupIntentsIntentConfirm
-    Tool 385: postSetupIntentsIntentVerifyMicrodeposits
-    Tool 386: getShippingRates
-    Tool 387: postShippingRates
-    Tool 388: getShippingRatesShippingRateToken
-    Tool 389: postShippingRatesShippingRateToken
-    Tool 390: postSigmaSavedQueriesId
-    Tool 391: getSigmaScheduledQueryRuns
-    Tool 392: getSigmaScheduledQueryRunsScheduledQueryRun
-    Tool 393: postSources
-    Tool 394: getSourcesSource
-    Tool 395: postSourcesSource
-    Tool 396: getSourcesSourceMandateNotificationsMandateNotification
-    Tool 397: getSourcesSourceSourceTransactions
-    Tool 398: getSourcesSourceSourceTransactionsSourceTransaction
-    Tool 399: postSourcesSourceVerify
-    Tool 400: getSubscriptionItems
-    Tool 401: postSubscriptionItems
-    Tool 402: deleteSubscriptionItemsItem
-    Tool 403: getSubscriptionItemsItem
-    Tool 404: postSubscriptionItemsItem
-    Tool 405: getSubscriptionSchedules
-    Tool 406: postSubscriptionSchedules
-    Tool 407: getSubscriptionSchedulesSchedule
-    Tool 408: postSubscriptionSchedulesSchedule
-    Tool 409: postSubscriptionSchedulesScheduleCancel
-    Tool 410: postSubscriptionSchedulesScheduleRelease
-    Tool 411: getSubscriptions
-    Tool 412: postSubscriptions
-    Tool 413: getSubscriptionsSearch
-    Tool 414: deleteSubscriptionsSubscriptionExposedId
-    Tool 415: getSubscriptionsSubscriptionExposedId
-    Tool 416: postSubscriptionsSubscriptionExposedId
-    Tool 417: deleteSubscriptionsSubscriptionExposedIdDiscount
-    Tool 418: postSubscriptionsSubscriptionResume
-    Tool 419: postTaxCalculations
-    Tool 420: getTaxCalculationsCalculation
-    Tool 421: getTaxCalculationsCalculationLineItems
-    Tool 422: getTaxRegistrations
-    Tool 423: postTaxRegistrations
-    Tool 424: getTaxRegistrationsId
-    Tool 425: postTaxRegistrationsId
-    Tool 426: getTaxSettings
-    Tool 427: postTaxSettings
-    Tool 428: postTaxTransactionsCreateFromCalculation
-    Tool 429: postTaxTransactionsCreateReversal
-    Tool 430: getTaxTransactionsTransaction
-    Tool 431: getTaxTransactionsTransactionLineItems
-    Tool 432: getTaxCodes
-    Tool 433: getTaxCodesId
-    Tool 434: getTaxIds
-    Tool 435: postTaxIds
-    Tool 436: deleteTaxIdsId
-    Tool 437: getTaxIdsId
-    Tool 438: getTaxRates
-    Tool 439: postTaxRates
-    Tool 440: getTaxRatesTaxRate
-    Tool 441: postTaxRatesTaxRate
-    Tool 442: getTerminalConfigurations
-    Tool 443: postTerminalConfigurations
-    Tool 444: deleteTerminalConfigurationsConfiguration
-    Tool 445: getTerminalConfigurationsConfiguration
-    Tool 446: postTerminalConfigurationsConfiguration
-    Tool 447: postTerminalConnectionTokens
-    Tool 448: getTerminalLocations
-    Tool 449: postTerminalLocations
-    Tool 450: deleteTerminalLocationsLocation
-    Tool 451: getTerminalLocationsLocation
-    Tool 452: postTerminalLocationsLocation
-    Tool 453: getTerminalReaders
-    Tool 454: postTerminalReaders
-    Tool 455: deleteTerminalReadersReader
-    Tool 456: getTerminalReadersReader
-    Tool 457: postTerminalReadersReader
-    Tool 458: postTerminalReadersReaderCancelAction
-    Tool 459: postTerminalReadersReaderProcessPaymentIntent
-    Tool 460: postTerminalReadersReaderProcessSetupIntent
-    Tool 461: postTerminalReadersReaderRefundPayment
-    Tool 462: postTerminalReadersReaderSetReaderDisplay
-    Tool 463: postTestHelpersConfirmationTokens
-    Tool 464: postTestHelpersCustomersCustomerFundCashBalance
-    Tool 465: postTestHelpersIssuingAuthorizations
-    Tool 466: postTestHelpersIssuingAuthorizationsAuthorizationCapture
-    Tool 467: postTestHelpersIssuingAuthorizationsAuthorizationExpire
-    Tool 468: postTestHelpersIssuingAuthorizationsAuthorizationFinalizeAmount
-    Tool 469: postTestHelpersIssuingAuthorizationsAuthorizationFraudChallengesRespond
-    Tool 470: postTestHelpersIssuingAuthorizationsAuthorizationIncrement
-    Tool 471: postTestHelpersIssuingAuthorizationsAuthorizationReverse
-    Tool 472: postTestHelpersIssuingCardsCardShippingDeliver
-    Tool 473: postTestHelpersIssuingCardsCardShippingFail
-    Tool 474: postTestHelpersIssuingCardsCardShippingReturn
-    Tool 475: postTestHelpersIssuingCardsCardShippingShip
-    Tool 476: postTestHelpersIssuingCardsCardShippingSubmit
-    Tool 477: postTestHelpersIssuingPersonalizationDesignsPersonalizationDesignActivate
-    Tool 478: postTestHelpersIssuingPersonalizationDesignsPersonalizationDesignDeactivate
-    Tool 479: postTestHelpersIssuingPersonalizationDesignsPersonalizationDesignReject
-    Tool 480: postTestHelpersIssuingSettlements
-    Tool 481: postTestHelpersIssuingSettlementsSettlementComplete
-    Tool 482: postTestHelpersIssuingTransactionsCreateForceCapture
-    Tool 483: postTestHelpersIssuingTransactionsCreateUnlinkedRefund
-    Tool 484: postTestHelpersIssuingTransactionsTransactionRefund
-    Tool 485: postTestHelpersRefundsRefundExpire
-    Tool 486: postTestHelpersTerminalReadersReaderPresentPaymentMethod
-    Tool 487: getTestHelpersTestClocks
-    Tool 488: postTestHelpersTestClocks
-    Tool 489: deleteTestHelpersTestClocksTestClock
-    Tool 490: getTestHelpersTestClocksTestClock
-    Tool 491: postTestHelpersTestClocksTestClockAdvance
-    Tool 492: postTestHelpersTreasuryInboundTransfersIdFail
-    Tool 493: postTestHelpersTreasuryInboundTransfersIdReturn
-    Tool 494: postTestHelpersTreasuryInboundTransfersIdSucceed
-    Tool 495: postTestHelpersTreasuryOutboundPaymentsId
-    Tool 496: postTestHelpersTreasuryOutboundPaymentsIdFail
-    Tool 497: postTestHelpersTreasuryOutboundPaymentsIdPost
-    Tool 498: postTestHelpersTreasuryOutboundPaymentsIdReturn
-    Tool 499: postTestHelpersTreasuryOutboundTransfersOutboundTransfer
-    Tool 500: postTestHelpersTreasuryOutboundTransfersOutboundTransferFail
-    Tool 501: postTestHelpersTreasuryOutboundTransfersOutboundTransferPost
-    Tool 502: postTestHelpersTreasuryOutboundTransfersOutboundTransferReturn
-    Tool 503: postTestHelpersTreasuryReceivedCredits
-    Tool 504: postTestHelpersTreasuryReceivedDebits
-    Tool 505: postTokens
-    Tool 506: getTokensToken
-    Tool 507: getTopups
-    Tool 508: postTopups
-    Tool 509: getTopupsTopup
-    Tool 510: postTopupsTopup
-    Tool 511: postTopupsTopupCancel
-    Tool 512: getTransfers
-    Tool 513: postTransfers
-    Tool 514: getTransfersIdReversals
-    Tool 515: postTransfersIdReversals
-    Tool 516: getTransfersTransfer
-    Tool 517: postTransfersTransfer
-    Tool 518: getTransfersTransferReversalsId
-    Tool 519: postTransfersTransferReversalsId
-    Tool 520: getTreasuryCreditReversals
-    Tool 521: postTreasuryCreditReversals
-    Tool 522: getTreasuryCreditReversalsCreditReversal
-    Tool 523: getTreasuryDebitReversals
-    Tool 524: postTreasuryDebitReversals
-    Tool 525: getTreasuryDebitReversalsDebitReversal
-    Tool 526: getTreasuryFinancialAccounts
-    Tool 527: postTreasuryFinancialAccounts
-    Tool 528: getTreasuryFinancialAccountsFinancialAccount
-    Tool 529: postTreasuryFinancialAccountsFinancialAccount
-    Tool 530: postTreasuryFinancialAccountsFinancialAccountClose
-    Tool 531: getTreasuryFinancialAccountsFinancialAccountFeatures
-    Tool 532: postTreasuryFinancialAccountsFinancialAccountFeatures
-    Tool 533: getTreasuryInboundTransfers
-    Tool 534: postTreasuryInboundTransfers
-    Tool 535: getTreasuryInboundTransfersId
-    Tool 536: postTreasuryInboundTransfersInboundTransferCancel
-    Tool 537: getTreasuryOutboundPayments
-    Tool 538: postTreasuryOutboundPayments
-    Tool 539: getTreasuryOutboundPaymentsId
-    Tool 540: postTreasuryOutboundPaymentsIdCancel
-    Tool 541: getTreasuryOutboundTransfers
-    Tool 542: postTreasuryOutboundTransfers
-    Tool 543: getTreasuryOutboundTransfersOutboundTransfer
-    Tool 544: postTreasuryOutboundTransfersOutboundTransferCancel
-    Tool 545: getTreasuryReceivedCredits
-    Tool 546: getTreasuryReceivedCreditsId
-    Tool 547: getTreasuryReceivedDebits
-    Tool 548: getTreasuryReceivedDebitsId
-    Tool 549: getTreasuryTransactionEntries
-    Tool 550: getTreasuryTransactionEntriesId
-    Tool 551: getTreasuryTransactions
-    Tool 552: getTreasuryTransactionsId
-    Tool 553: getWebhookEndpoints
-    Tool 554: postWebhookEndpoints
-    Tool 555: deleteWebhookEndpointsWebhookEndpoint
-    Tool 556: getWebhookEndpointsWebhookEndpoint
-    Tool 557: postWebhookEndpointsWebhookEndpoint'
+    Test 2: List : Tools
+    Found 557 : Tools
+    - Tool 1: getAccount
+    - Tool 2: postAccountLinks
+    - Tool 3: postAccountSessions
+    - Tool 4: getAccounts
+    - Tool 5: postAccounts
+    - Tool 6: deleteAccountsAccount
+    - Tool 7: getAccountsAccount
+    - Tool 8: postAccountsAccount
+    - Tool 9: postAccountsAccountBankAccounts
+    - Tool 10: deleteAccountsAccountBankAccountsId
+    - Tool 11: getAccountsAccountBankAccountsId
+    - Tool 12: postAccountsAccountBankAccountsId
+    - Tool 13: getAccountsAccountCapabilities
+    - Tool 14: getAccountsAccountCapabilitiesCapability
+    - Tool 15: postAccountsAccountCapabilitiesCapability
+    - Tool 16: getAccountsAccountExternalAccounts
+    - Tool 17: postAccountsAccountExternalAccounts
+    - Tool 18: deleteAccountsAccountExternalAccountsId
+    - Tool 19: getAccountsAccountExternalAccountsId
+    - Tool 20: postAccountsAccountExternalAccountsId
+    - Tool 21: postAccountsAccountLoginLinks
+    - Tool 22: getAccountsAccountPeople
+    - Tool 23: postAccountsAccountPeople
+    - Tool 24: deleteAccountsAccountPeoplePerson
+    - Tool 25: getAccountsAccountPeoplePerson
+    - Tool 26: postAccountsAccountPeoplePerson
+    - Tool 27: getAccountsAccountPersons
+    - Tool 28: postAccountsAccountPersons
+    - Tool 29: deleteAccountsAccountPersonsPerson
+    - Tool 30: getAccountsAccountPersonsPerson
+    - Tool 31: postAccountsAccountPersonsPerson
+    - Tool 32: postAccountsAccountReject
+    - Tool 33: getApplePayDomains
+    - Tool 34: postApplePayDomains
+    - Tool 35: deleteApplePayDomainsDomain
+    - Tool 36: getApplePayDomainsDomain
+    - Tool 37: getApplicationFees
+    - Tool 38: getApplicationFeesFeeRefundsId
+    - Tool 39: postApplicationFeesFeeRefundsId
+    - Tool 40: getApplicationFeesId
+    - Tool 41: postApplicationFeesIdRefund
+    - Tool 42: getApplicationFeesIdRefunds
+    - Tool 43: postApplicationFeesIdRefunds
+    - Tool 44: getAppsSecrets
+    - Tool 45: postAppsSecrets
+    - Tool 46: postAppsSecretsDelete
+    - Tool 47: getAppsSecretsFind
+    - Tool 48: getBalance
+    - Tool 49: getBalanceHistory
+    - Tool 50: getBalanceHistoryId
+    - Tool 51: getBalanceTransactions
+    - Tool 52: getBalanceTransactionsId
+    - Tool 53: getBillingAlerts
+    - Tool 54: postBillingAlerts
+    - Tool 55: getBillingAlertsId
+    - Tool 56: postBillingAlertsIdActivate
+    - Tool 57: postBillingAlertsIdArchive
+    - Tool 58: postBillingAlertsIdDeactivate
+    - Tool 59: getBillingCreditBalanceSummary
+    - Tool 60: getBillingCreditBalanceTransactions
+    - Tool 61: getBillingCreditBalanceTransactionsId
+    - Tool 62: getBillingCreditGrants
+    - Tool 63: postBillingCreditGrants
+    - Tool 64: getBillingCreditGrantsId
+    - Tool 65: postBillingCreditGrantsId
+    - Tool 66: postBillingCreditGrantsIdExpire
+    - Tool 67: postBillingCreditGrantsIdVoid
+    - Tool 68: postBillingMeterEventAdjustments
+    - Tool 69: postBillingMeterEvents
+    - Tool 70: getBillingMeters
+    - Tool 71: postBillingMeters
+    - Tool 72: getBillingMetersId
+    - Tool 73: postBillingMetersId
+    - Tool 74: postBillingMetersIdDeactivate
+    - Tool 75: getBillingMetersIdEventSummaries
+    - Tool 76: postBillingMetersIdReactivate
+    - Tool 77: getBillingPortalConfigurations
+    - Tool 78: postBillingPortalConfigurations
+    - Tool 79: getBillingPortalConfigurationsConfiguration
+    - Tool 80: postBillingPortalConfigurationsConfiguration
+    - Tool 81: postBillingPortalSessions
+    - Tool 82: getCharges
+    - Tool 83: postCharges
+    - Tool 84: getChargesSearch
+    - Tool 85: getChargesCharge
+    - Tool 86: postChargesCharge
+    - Tool 87: postChargesChargeCapture
+    - Tool 88: getChargesChargeDispute
+    - Tool 89: postChargesChargeDispute
+    - Tool 90: postChargesChargeDisputeClose
+    - Tool 91: postChargesChargeRefund
+    - Tool 92: getChargesChargeRefunds
+    - Tool 93: postChargesChargeRefunds
+    - Tool 94: getChargesChargeRefundsRefund
+    - Tool 95: postChargesChargeRefundsRefund
+    - Tool 96: getCheckoutSessions
+    - Tool 97: postCheckoutSessions
+    - Tool 98: getCheckoutSessionsSession
+    - Tool 99: postCheckoutSessionsSession
+    - Tool 100: postCheckoutSessionsSessionExpire
+    - Tool 101: getCheckoutSessionsSessionLineItems
+    - Tool 102: getClimateOrders
+    - Tool 103: postClimateOrders
+    - Tool 104: getClimateOrdersOrder
+    - Tool 105: postClimateOrdersOrder
+    - Tool 106: postClimateOrdersOrderCancel
+    - Tool 107: getClimateProducts
+    - Tool 108: getClimateProductsProduct
+    - Tool 109: getClimateSuppliers
+    - Tool 110: getClimateSuppliersSupplier
+    - Tool 111: getConfirmationTokensConfirmationToken
+    - Tool 112: getCountrySpecs
+    - Tool 113: getCountrySpecsCountry
+    - Tool 114: getCoupons
+    - Tool 115: postCoupons
+    - Tool 116: deleteCouponsCoupon
+    - Tool 117: getCouponsCoupon
+    - Tool 118: postCouponsCoupon
+    - Tool 119: getCreditNotes
+    - Tool 120: postCreditNotes
+    - Tool 121: getCreditNotesPreview
+    - Tool 122: getCreditNotesPreviewLines
+    - Tool 123: getCreditNotesCreditNoteLines
+    - Tool 124: getCreditNotesId
+    - Tool 125: postCreditNotesId
+    - Tool 126: postCreditNotesIdVoid
+    - Tool 127: postCustomerSessions
+    - Tool 128: getCustomers
+    - Tool 129: postCustomers
+    - Tool 130: getCustomersSearch
+    - Tool 131: deleteCustomersCustomer
+    - Tool 132: getCustomersCustomer
+    - Tool 133: postCustomersCustomer
+    - Tool 134: getCustomersCustomerBalanceTransactions
+    - Tool 135: postCustomersCustomerBalanceTransactions
+    - Tool 136: getCustomersCustomerBalanceTransactionsTransaction
+    - Tool 137: postCustomersCustomerBalanceTransactionsTransaction
+    - Tool 138: postCustomersCustomerBankAccounts
+    - Tool 139: deleteCustomersCustomerBankAccountsId
+    - Tool 140: postCustomersCustomerBankAccountsId
+    - Tool 141: postCustomersCustomerBankAccountsIdVerify
+    - Tool 142: postCustomersCustomerCards
+    - Tool 143: deleteCustomersCustomerCardsId
+    - Tool 144: postCustomersCustomerCardsId
+    - Tool 145: getCustomersCustomerCashBalance
+    - Tool 146: postCustomersCustomerCashBalance
+    - Tool 147: getCustomersCustomerCashBalanceTransactions
+    - Tool 148: getCustomersCustomerCashBalanceTransactionsTransaction
+    - Tool 149: deleteCustomersCustomerDiscount
+    - Tool 150: getCustomersCustomerDiscount
+    - Tool 151: postCustomersCustomerFundingInstructions
+    - Tool 152: getCustomersCustomerPaymentMethods
+    - Tool 153: getCustomersCustomerPaymentMethodsPaymentMethod
+    - Tool 154: getCustomersCustomerSources
+    - Tool 155: postCustomersCustomerSources
+    - Tool 156: deleteCustomersCustomerSourcesId
+    - Tool 157: getCustomersCustomerSourcesId
+    - Tool 158: postCustomersCustomerSourcesId
+    - Tool 159: postCustomersCustomerSourcesIdVerify
+    - Tool 160: getCustomersCustomerSubscriptions
+    - Tool 161: postCustomersCustomerSubscriptions
+    - Tool 162: deleteCustomersCustomerSubscriptionsSubscriptionExposedId
+    - Tool 163: getCustomersCustomerSubscriptionsSubscriptionExposedId
+    - Tool 164: postCustomersCustomerSubscriptionsSubscriptionExposedId
+    - Tool 165: deleteCustomersCustomerSubscriptionsSubscriptionExposedIdDiscount
+    - Tool 166: getCustomersCustomerSubscriptionsSubscriptionExposedIdDiscount
+    - Tool 167: getCustomersCustomerTaxIds
+    - Tool 168: postCustomersCustomerTaxIds
+    - Tool 169: deleteCustomersCustomerTaxIdsId
+    - Tool 170: getCustomersCustomerTaxIdsId
+    - Tool 171: getDisputes
+    - Tool 172: getDisputesDispute
+    - Tool 173: postDisputesDispute
+    - Tool 174: postDisputesDisputeClose
+    - Tool 175: getEntitlementsActiveEntitlements
+    - Tool 176: getEntitlementsActiveEntitlementsId
+    - Tool 177: getEntitlementsFeatures
+    - Tool 178: postEntitlementsFeatures
+    - Tool 179: getEntitlementsFeaturesId
+    - Tool 180: postEntitlementsFeaturesId
+    - Tool 181: postEphemeralKeys
+    - Tool 182: deleteEphemeralKeysKey
+    - Tool 183: getEvents
+    - Tool 184: getEventsId
+    - Tool 185: getExchangeRates
+    - Tool 186: getExchangeRatesRateId
+    - Tool 187: postExternalAccountsId
+    - Tool 188: getFileLinks
+    - Tool 189: postFileLinks
+    - Tool 190: getFileLinksLink
+    - Tool 191: postFileLinksLink
+    - Tool 192: getFiles
+    - Tool 193: postFiles
+    - Tool 194: getFilesFile
+    - Tool 195: getFinancialConnectionsAccounts
+    - Tool 196: getFinancialConnectionsAccountsAccount
+    - Tool 197: postFinancialConnectionsAccountsAccountDisconnect
+    - Tool 198: getFinancialConnectionsAccountsAccountOwners
+    - Tool 199: postFinancialConnectionsAccountsAccountRefresh
+    - Tool 200: postFinancialConnectionsAccountsAccountSubscribe
+    - Tool 201: postFinancialConnectionsAccountsAccountUnsubscribe
+    - Tool 202: postFinancialConnectionsSessions
+    - Tool 203: getFinancialConnectionsSessionsSession
+    - Tool 204: getFinancialConnectionsTransactions
+    - Tool 205: getFinancialConnectionsTransactionsTransaction
+    - Tool 206: getForwardingRequests
+    - Tool 207: postForwardingRequests
+    - Tool 208: getForwardingRequestsId
+    - Tool 209: getIdentityVerificationReports
+    - Tool 210: getIdentityVerificationReportsReport
+    - Tool 211: getIdentityVerificationSessions
+    - Tool 212: postIdentityVerificationSessions
+    - Tool 213: getIdentityVerificationSessionsSession
+    - Tool 214: postIdentityVerificationSessionsSession
+    - Tool 215: postIdentityVerificationSessionsSessionCancel
+    - Tool 216: postIdentityVerificationSessionsSessionRedact
+    - Tool 217: getInvoicePayments
+    - Tool 218: getInvoicePaymentsInvoicePayment
+    - Tool 219: getInvoiceRenderingTemplates
+    - Tool 220: getInvoiceRenderingTemplatesTemplate
+    - Tool 221: postInvoiceRenderingTemplatesTemplateArchive
+    - Tool 222: postInvoiceRenderingTemplatesTemplateUnarchive
+    - Tool 223: getInvoiceitems
+    - Tool 224: postInvoiceitems
+    - Tool 225: deleteInvoiceitemsInvoiceitem
+    - Tool 226: getInvoiceitemsInvoiceitem
+    - Tool 227: postInvoiceitemsInvoiceitem
+    - Tool 228: getInvoices
+    - Tool 229: postInvoices
+    - Tool 230: postInvoicesCreatePreview
+    - Tool 231: getInvoicesSearch
+    - Tool 232: deleteInvoicesInvoice
+    - Tool 233: getInvoicesInvoice
+    - Tool 234: postInvoicesInvoice
+    - Tool 235: postInvoicesInvoiceAddLines
+    - Tool 236: postInvoicesInvoiceFinalize
+    - Tool 237: getInvoicesInvoiceLines
+    - Tool 238: postInvoicesInvoiceLinesLineItemId
+    - Tool 239: postInvoicesInvoiceMarkUncollectible
+    - Tool 240: postInvoicesInvoicePay
+    - Tool 241: postInvoicesInvoiceRemoveLines
+    - Tool 242: postInvoicesInvoiceSend
+    - Tool 243: postInvoicesInvoiceUpdateLines
+    - Tool 244: postInvoicesInvoiceVoid
+    - Tool 245: getIssuingAuthorizations
+    - Tool 246: getIssuingAuthorizationsAuthorization
+    - Tool 247: postIssuingAuthorizationsAuthorization
+    - Tool 248: getIssuingCardholders
+    - Tool 249: postIssuingCardholders
+    - Tool 250: getIssuingCardholdersCardholder
+    - Tool 251: postIssuingCardholdersCardholder
+    - Tool 252: getIssuingCards
+    - Tool 253: postIssuingCards
+    - Tool 254: getIssuingCardsCard
+    - Tool 255: postIssuingCardsCard
+    - Tool 256: getIssuingDisputes
+    - Tool 257: postIssuingDisputes
+    - Tool 258: getIssuingDisputesDispute
+    - Tool 259: postIssuingDisputesDispute
+    - Tool 260: postIssuingDisputesDisputeSubmit
+    - Tool 261: getIssuingPersonalizationDesigns
+    - Tool 262: postIssuingPersonalizationDesigns
+    - Tool 263: getIssuingPersonalizationDesignsPersonalizationDesign
+    - Tool 264: postIssuingPersonalizationDesignsPersonalizationDesign
+    - Tool 265: getIssuingPhysicalBundles
+    - Tool 266: getIssuingPhysicalBundlesPhysicalBundle
+    - Tool 267: getIssuingSettlementsSettlement
+    - Tool 268: postIssuingSettlementsSettlement
+    - Tool 269: getIssuingTokens
+    - Tool 270: getIssuingTokensToken
+    - Tool 271: postIssuingTokensToken
+    - Tool 272: getIssuingTransactions
+    - Tool 273: getIssuingTransactionsTransaction
+    - Tool 274: postIssuingTransactionsTransaction
+    - Tool 275: postLinkAccountSessions
+    - Tool 276: getLinkAccountSessionsSession
+    - Tool 277: getLinkedAccounts
+    - Tool 278: getLinkedAccountsAccount
+    - Tool 279: postLinkedAccountsAccountDisconnect
+    - Tool 280: getLinkedAccountsAccountOwners
+    - Tool 281: postLinkedAccountsAccountRefresh
+    - Tool 282: getMandatesMandate
+    - Tool 283: getPaymentIntents
+    - Tool 284: postPaymentIntents
+    - Tool 285: getPaymentIntentsSearch
+    - Tool 286: getPaymentIntentsIntent
+    - Tool 287: postPaymentIntentsIntent
+    - Tool 288: postPaymentIntentsIntentApplyCustomerBalance
+    - Tool 289: postPaymentIntentsIntentCancel
+    - Tool 290: postPaymentIntentsIntentCapture
+    - Tool 291: postPaymentIntentsIntentConfirm
+    - Tool 292: postPaymentIntentsIntentIncrementAuthorization
+    - Tool 293: postPaymentIntentsIntentVerifyMicrodeposits
+    - Tool 294: getPaymentLinks
+    - Tool 295: postPaymentLinks
+    - Tool 296: getPaymentLinksPaymentLink
+    - Tool 297: postPaymentLinksPaymentLink
+    - Tool 298: getPaymentLinksPaymentLinkLineItems
+    - Tool 299: getPaymentMethodConfigurations
+    - Tool 300: postPaymentMethodConfigurations
+    - Tool 301: getPaymentMethodConfigurationsConfiguration
+    - Tool 302: postPaymentMethodConfigurationsConfiguration
+    - Tool 303: getPaymentMethodDomains
+    - Tool 304: postPaymentMethodDomains
+    - Tool 305: getPaymentMethodDomainsPaymentMethodDomain
+    - Tool 306: postPaymentMethodDomainsPaymentMethodDomain
+    - Tool 307: postPaymentMethodDomainsPaymentMethodDomainValidate
+    - Tool 308: getPaymentMethods
+    - Tool 309: postPaymentMethods
+    - Tool 310: getPaymentMethodsPaymentMethod
+    - Tool 311: postPaymentMethodsPaymentMethod
+    - Tool 312: postPaymentMethodsPaymentMethodAttach
+    - Tool 313: postPaymentMethodsPaymentMethodDetach
+    - Tool 314: getPayouts
+    - Tool 315: postPayouts
+    - Tool 316: getPayoutsPayout
+    - Tool 317: postPayoutsPayout
+    - Tool 318: postPayoutsPayoutCancel
+    - Tool 319: postPayoutsPayoutReverse
+    - Tool 320: getPlans
+    - Tool 321: postPlans
+    - Tool 322: deletePlansPlan
+    - Tool 323: getPlansPlan
+    - Tool 324: postPlansPlan
+    - Tool 325: getPrices
+    - Tool 326: postPrices
+    - Tool 327: getPricesSearch
+    - Tool 328: getPricesPrice
+    - Tool 329: postPricesPrice
+    - Tool 330: getProducts
+    - Tool 331: postProducts
+    - Tool 332: getProductsSearch
+    - Tool 333: deleteProductsId
+    - Tool 334: getProductsId
+    - Tool 335: postProductsId
+    - Tool 336: getProductsProductFeatures
+    - Tool 337: postProductsProductFeatures
+    - Tool 338: deleteProductsProductFeaturesId
+    - Tool 339: getProductsProductFeaturesId
+    - Tool 340: getPromotionCodes
+    - Tool 341: postPromotionCodes
+    - Tool 342: getPromotionCodesPromotionCode
+    - Tool 343: postPromotionCodesPromotionCode
+    - Tool 344: getQuotes
+    - Tool 345: postQuotes
+    - Tool 346: getQuotesQuote
+    - Tool 347: postQuotesQuote
+    - Tool 348: postQuotesQuoteAccept
+    - Tool 349: postQuotesQuoteCancel
+    - Tool 350: getQuotesQuoteComputedUpfrontLineItems
+    - Tool 351: postQuotesQuoteFinalize
+    - Tool 352: getQuotesQuoteLineItems
+    - Tool 353: getQuotesQuotePdf
+    - Tool 354: getRadarEarlyFraudWarnings
+    - Tool 355: getRadarEarlyFraudWarningsEarlyFraudWarning
+    - Tool 356: getRadarValueListItems
+    - Tool 357: postRadarValueListItems
+    - Tool 358: deleteRadarValueListItemsItem
+    - Tool 359: getRadarValueListItemsItem
+    - Tool 360: getRadarValueLists
+    - Tool 361: postRadarValueLists
+    - Tool 362: deleteRadarValueListsValueList
+    - Tool 363: getRadarValueListsValueList
+    - Tool 364: postRadarValueListsValueList
+    - Tool 365: getRefunds
+    - Tool 366: postRefunds
+    - Tool 367: getRefundsRefund
+    - Tool 368: postRefundsRefund
+    - Tool 369: postRefundsRefundCancel
+    - Tool 370: getReportingReportRuns
+    - Tool 371: postReportingReportRuns
+    - Tool 372: getReportingReportRunsReportRun
+    - Tool 373: getReportingReportTypes
+    - Tool 374: getReportingReportTypesReportType
+    - Tool 375: getReviews
+    - Tool 376: getReviewsReview
+    - Tool 377: postReviewsReviewApprove
+    - Tool 378: getSetupAttempts
+    - Tool 379: getSetupIntents
+    - Tool 380: postSetupIntents
+    - Tool 381: getSetupIntentsIntent
+    - Tool 382: postSetupIntentsIntent
+    - Tool 383: postSetupIntentsIntentCancel
+    - Tool 384: postSetupIntentsIntentConfirm
+    - Tool 385: postSetupIntentsIntentVerifyMicrodeposits
+    - Tool 386: getShippingRates
+    - Tool 387: postShippingRates
+    - Tool 388: getShippingRatesShippingRateToken
+    - Tool 389: postShippingRatesShippingRateToken
+    - Tool 390: postSigmaSavedQueriesId
+    - Tool 391: getSigmaScheduledQueryRuns
+    - Tool 392: getSigmaScheduledQueryRunsScheduledQueryRun
+    - Tool 393: postSources
+    - Tool 394: getSourcesSource
+    - Tool 395: postSourcesSource
+    - Tool 396: getSourcesSourceMandateNotificationsMandateNotification
+    - Tool 397: getSourcesSourceSourceTransactions
+    - Tool 398: getSourcesSourceSourceTransactionsSourceTransaction
+    - Tool 399: postSourcesSourceVerify
+    - Tool 400: getSubscriptionItems
+    - Tool 401: postSubscriptionItems
+    - Tool 402: deleteSubscriptionItemsItem
+    - Tool 403: getSubscriptionItemsItem
+    - Tool 404: postSubscriptionItemsItem
+    - Tool 405: getSubscriptionSchedules
+    - Tool 406: postSubscriptionSchedules
+    - Tool 407: getSubscriptionSchedulesSchedule
+    - Tool 408: postSubscriptionSchedulesSchedule
+    - Tool 409: postSubscriptionSchedulesScheduleCancel
+    - Tool 410: postSubscriptionSchedulesScheduleRelease
+    - Tool 411: getSubscriptions
+    - Tool 412: postSubscriptions
+    - Tool 413: getSubscriptionsSearch
+    - Tool 414: deleteSubscriptionsSubscriptionExposedId
+    - Tool 415: getSubscriptionsSubscriptionExposedId
+    - Tool 416: postSubscriptionsSubscriptionExposedId
+    - Tool 417: deleteSubscriptionsSubscriptionExposedIdDiscount
+    - Tool 418: postSubscriptionsSubscriptionResume
+    - Tool 419: postTaxCalculations
+    - Tool 420: getTaxCalculationsCalculation
+    - Tool 421: getTaxCalculationsCalculationLineItems
+    - Tool 422: getTaxRegistrations
+    - Tool 423: postTaxRegistrations
+    - Tool 424: getTaxRegistrationsId
+    - Tool 425: postTaxRegistrationsId
+    - Tool 426: getTaxSettings
+    - Tool 427: postTaxSettings
+    - Tool 428: postTaxTransactionsCreateFromCalculation
+    - Tool 429: postTaxTransactionsCreateReversal
+    - Tool 430: getTaxTransactionsTransaction
+    - Tool 431: getTaxTransactionsTransactionLineItems
+    - Tool 432: getTaxCodes
+    - Tool 433: getTaxCodesId
+    - Tool 434: getTaxIds
+    - Tool 435: postTaxIds
+    - Tool 436: deleteTaxIdsId
+    - Tool 437: getTaxIdsId
+    - Tool 438: getTaxRates
+    - Tool 439: postTaxRates
+    - Tool 440: getTaxRatesTaxRate
+    - Tool 441: postTaxRatesTaxRate
+    - Tool 442: getTerminalConfigurations
+    - Tool 443: postTerminalConfigurations
+    - Tool 444: deleteTerminalConfigurationsConfiguration
+    - Tool 445: getTerminalConfigurationsConfiguration
+    - Tool 446: postTerminalConfigurationsConfiguration
+    - Tool 447: postTerminalConnectionTokens
+    - Tool 448: getTerminalLocations
+    - Tool 449: postTerminalLocations
+    - Tool 450: deleteTerminalLocationsLocation
+    - Tool 451: getTerminalLocationsLocation
+    - Tool 452: postTerminalLocationsLocation
+    - Tool 453: getTerminalReaders
+    - Tool 454: postTerminalReaders
+    - Tool 455: deleteTerminalReadersReader
+    - Tool 456: getTerminalReadersReader
+    - Tool 457: postTerminalReadersReader
+    - Tool 458: postTerminalReadersReaderCancelAction
+    - Tool 459: postTerminalReadersReaderProcessPaymentIntent
+    - Tool 460: postTerminalReadersReaderProcessSetupIntent
+    - Tool 461: postTerminalReadersReaderRefundPayment
+    - Tool 462: postTerminalReadersReaderSetReaderDisplay
+    - Tool 463: postTestHelpersConfirmationTokens
+    - Tool 464: postTestHelpersCustomersCustomerFundCashBalance
+    - Tool 465: postTestHelpersIssuingAuthorizations
+    - Tool 466: postTestHelpersIssuingAuthorizationsAuthorizationCapture
+    - Tool 467: postTestHelpersIssuingAuthorizationsAuthorizationExpire
+    - Tool 468: postTestHelpersIssuingAuthorizationsAuthorizationFinalizeAmount
+    - Tool 469: postTestHelpersIssuingAuthorizationsAuthorizationFraudChallengesRespond
+    - Tool 470: postTestHelpersIssuingAuthorizationsAuthorizationIncrement
+    - Tool 471: postTestHelpersIssuingAuthorizationsAuthorizationReverse
+    - Tool 472: postTestHelpersIssuingCardsCardShippingDeliver
+    - Tool 473: postTestHelpersIssuingCardsCardShippingFail
+    - Tool 474: postTestHelpersIssuingCardsCardShippingReturn
+    - Tool 475: postTestHelpersIssuingCardsCardShippingShip
+    - Tool 476: postTestHelpersIssuingCardsCardShippingSubmit
+    - Tool 477: postTestHelpersIssuingPersonalizationDesignsPersonalizationDesignActivate
+    - Tool 478: postTestHelpersIssuingPersonalizationDesignsPersonalizationDesignDeactivate
+    - Tool 479: postTestHelpersIssuingPersonalizationDesignsPersonalizationDesignReject
+    - Tool 480: postTestHelpersIssuingSettlements
+    - Tool 481: postTestHelpersIssuingSettlementsSettlementComplete
+    - Tool 482: postTestHelpersIssuingTransactionsCreateForceCapture
+    - Tool 483: postTestHelpersIssuingTransactionsCreateUnlinkedRefund
+    - Tool 484: postTestHelpersIssuingTransactionsTransactionRefund
+    - Tool 485: postTestHelpersRefundsRefundExpire
+    - Tool 486: postTestHelpersTerminalReadersReaderPresentPaymentMethod
+    - Tool 487: getTestHelpersTestClocks
+    - Tool 488: postTestHelpersTestClocks
+    - Tool 489: deleteTestHelpersTestClocksTestClock
+    - Tool 490: getTestHelpersTestClocksTestClock
+    - Tool 491: postTestHelpersTestClocksTestClockAdvance
+    - Tool 492: postTestHelpersTreasuryInboundTransfersIdFail
+    - Tool 493: postTestHelpersTreasuryInboundTransfersIdReturn
+    - Tool 494: postTestHelpersTreasuryInboundTransfersIdSucceed
+    - Tool 495: postTestHelpersTreasuryOutboundPaymentsId
+    - Tool 496: postTestHelpersTreasuryOutboundPaymentsIdFail
+    - Tool 497: postTestHelpersTreasuryOutboundPaymentsIdPost
+    - Tool 498: postTestHelpersTreasuryOutboundPaymentsIdReturn
+    - Tool 499: postTestHelpersTreasuryOutboundTransfersOutboundTransfer
+    - Tool 500: postTestHelpersTreasuryOutboundTransfersOutboundTransferFail
+    - Tool 501: postTestHelpersTreasuryOutboundTransfersOutboundTransferPost
+    - Tool 502: postTestHelpersTreasuryOutboundTransfersOutboundTransferReturn
+    - Tool 503: postTestHelpersTreasuryReceivedCredits
+    - Tool 504: postTestHelpersTreasuryReceivedDebits
+    - Tool 505: postTokens
+    - Tool 506: getTokensToken
+    - Tool 507: getTopups
+    - Tool 508: postTopups
+    - Tool 509: getTopupsTopup
+    - Tool 510: postTopupsTopup
+    - Tool 511: postTopupsTopupCancel
+    - Tool 512: getTransfers
+    - Tool 513: postTransfers
+    - Tool 514: getTransfersIdReversals
+    - Tool 515: postTransfersIdReversals
+    - Tool 516: getTransfersTransfer
+    - Tool 517: postTransfersTransfer
+    - Tool 518: getTransfersTransferReversalsId
+    - Tool 519: postTransfersTransferReversalsId
+    - Tool 520: getTreasuryCreditReversals
+    - Tool 521: postTreasuryCreditReversals
+    - Tool 522: getTreasuryCreditReversalsCreditReversal
+    - Tool 523: getTreasuryDebitReversals
+    - Tool 524: postTreasuryDebitReversals
+    - Tool 525: getTreasuryDebitReversalsDebitReversal
+    - Tool 526: getTreasuryFinancialAccounts
+    - Tool 527: postTreasuryFinancialAccounts
+    - Tool 528: getTreasuryFinancialAccountsFinancialAccount
+    - Tool 529: postTreasuryFinancialAccountsFinancialAccount
+    - Tool 530: postTreasuryFinancialAccountsFinancialAccountClose
+    - Tool 531: getTreasuryFinancialAccountsFinancialAccountFeatures
+    - Tool 532: postTreasuryFinancialAccountsFinancialAccountFeatures
+    - Tool 533: getTreasuryInboundTransfers
+    - Tool 534: postTreasuryInboundTransfers
+    - Tool 535: getTreasuryInboundTransfersId
+    - Tool 536: postTreasuryInboundTransfersInboundTransferCancel
+    - Tool 537: getTreasuryOutboundPayments
+    - Tool 538: postTreasuryOutboundPayments
+    - Tool 539: getTreasuryOutboundPaymentsId
+    - Tool 540: postTreasuryOutboundPaymentsIdCancel
+    - Tool 541: getTreasuryOutboundTransfers
+    - Tool 542: postTreasuryOutboundTransfers
+    - Tool 543: getTreasuryOutboundTransfersOutboundTransfer
+    - Tool 544: postTreasuryOutboundTransfersOutboundTransferCancel
+    - Tool 545: getTreasuryReceivedCredits
+    - Tool 546: getTreasuryReceivedCreditsId
+    - Tool 547: getTreasuryReceivedDebits
+    - Tool 548: getTreasuryReceivedDebitsId
+    - Tool 549: getTreasuryTransactionEntries
+    - Tool 550: getTreasuryTransactionEntriesId
+    - Tool 551: getTreasuryTransactions
+    - Tool 552: getTreasuryTransactionsId
+    - Tool 553: getWebhookEndpoints
+    - Tool 554: postWebhookEndpoints
+    - Tool 555: deleteWebhookEndpointsWebhookEndpoint
+    - Tool 556: getWebhookEndpointsWebhookEndpoint
+    - Tool 557: postWebhookEndpointsWebhookEndpoint'
 
 Test 3: Check server status
     Server status: running
