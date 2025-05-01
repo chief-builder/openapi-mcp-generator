@@ -191,18 +191,32 @@ export class MyProvider implements IProvider {
 }
 ```
 
-### Running Tests
 
-```bash
-# Run all tests
-npm test
+### Testing Strategy
+The OpenAPI MCP Generator has a comprehensive testing strategy combining unit tests and integration tests to ensure reliability and correctness.
+- Unit Tests
+    Unit tests focus on testing individual components in isolation:
+    1. Parser Tests: Verify that OpenAPI specifications are correctly parsed.
+    2. Generator Tests: Ensure code generation works as expected with different inputs.
+    3. Provider Tests: Test provider-specific functionality like mapping operations to tools.
+    4. Utility Tests: Test helper functions and utilities like naming conventions.
 
-# Run tests with coverage
-npm run test:coverage
+- Integration Tests
+    Integration tests verify that components work correctly together:
+    1. Parser-Generator Integration: Tests the flow from parsing a specification to generating code.
+    2. Provider Integration: Verifies that providers correctly implement all required interfaces.
+    3. Server Generation: Tests generation of server files with correct structure.
+    4. Full Integration: End-to-end tests from specification to server generation.
 
-# Run Stripe functional test
-npm run test:functional
-```
+- Running Tests
+- Run Unit Tests
+    'npm run test'
+
+- Run integration tests
+    'npm run test:integration'
+
+- Run all tests
+    'npm run test:all'
 
 ## Customizing Generated Servers
 

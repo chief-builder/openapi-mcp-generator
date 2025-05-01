@@ -33,3 +33,6 @@ Thumbs.db
 
 # Test coverage
 coverage/
+test-output/
+test-output-provider/
+test-output-pg/

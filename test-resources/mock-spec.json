@@ -1,0 +1,35 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Mock API",
+      "version": "1.0.0",
+      "description": "API for integration testing"
+    },
+    "paths": {
+      "/items": {
+        "get": {
+          "operationId": "listItems",
+          "summary": "List items",
+          "responses": {
+            "200": {
+              "description": "Success",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": { "type": "string" },
+                        "name": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }

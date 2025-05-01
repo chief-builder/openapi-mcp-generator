@@ -93,6 +93,7 @@ export class MCPGenerator implements IMCPGenerator {
       );
       generatedFiles.push(`src/${providerConfig.name || 'api'}-server.ts`);
       
+      
       // Generate index file
       await this.generateIndexFile(config, providerConfig, authProviderResult.name);
       generatedFiles.push('src/index.ts');

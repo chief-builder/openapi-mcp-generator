@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Command Line Interface for OpenAPI MCP Generator
  */

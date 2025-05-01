@@ -1,0 +1,20 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Server Test API",
+    "version": "1.0.0",
+    "description": "API for server integration testing"
+  },
+  "paths": {
+    "/test": {
+      "get": {
+        "operationId": "getTest",
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    }
+  }
+}
