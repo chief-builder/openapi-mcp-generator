@@ -18,7 +18,8 @@ import { IHandlerGenerationOptions } from '../../core/models/generator-types';
 import {
   mapStripeParametersToSchema,
   mapStripeResponsesToSchema,
-  operationIdToToolName
+  operationIdToToolName,
+  determineToolAnnotations,
 } from './parameter-mapper';
 
 /**
@@ -217,6 +218,7 @@ export class StripeProvider implements IProvider {
         parameters: mapStripeParametersToSchema(operation),
         returns: mapStripeResponsesToSchema(operation),
         requiresAuth: true,
+        annotations: determineToolAnnotations(operation),
         metadata: {
           path: operation.path,
           method: operation.method,

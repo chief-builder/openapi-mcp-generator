@@ -5,7 +5,7 @@
  */
 
 import { IParsedEndpoint, IParsedParameter } from '../../core/models/parser-types';
-import { IMCPSchema } from '../../core/models/mcp-types';
+import { IMCPSchema, IMCPToolAnnotations } from '../../core/models/mcp-types';
 
 /**
  * Map Stripe OpenAPI parameters to MCP schema
@@ -203,6 +203,135 @@ export function operationIdToToolName(operationId: string): string {
   return operationId
     .replace(/[-_]([a-z])/g, (_, letter) => letter.toUpperCase())
     .replace(/^([A-Z])/, (_, letter) => letter.toLowerCase());
+}
+
+/**
+ * Determine tool annotations based on operation attributes
+ */
+export function determineToolAnnotations(operation: IParsedEndpoint): IMCPToolAnnotations {
+  const annotations: IMCPToolAnnotations = {
+    title: formatToolTitle(operation.operationId)
+  };
+  
+  // Determine if the operation is read-only based on the HTTP method
+  if (operation.method === 'GET') {
+    annotations.readOnlyHint = true;
+    annotations.destructiveHint = false;
+  } else {
+    annotations.readOnlyHint = false;
+    
+    // DELETE operations are always destructive
+    if (operation.method === 'DELETE') {
+      annotations.destructiveHint = true;
+    } 
+    // POST, PUT operations might be destructive, but some are not
+    else if (operation.method === 'POST' || operation.method === 'PUT') {
+      // Check if this is a destructive operation
+      const isDestructive = isDestructiveOperation(operation);
+      annotations.destructiveHint = isDestructive;
+    } else {
+      annotations.destructiveHint = false;
+    }
+  }
+  
+  // Determine idempotency based on operation attributes
+  annotations.idempotentHint = isIdempotentOperation(operation);
+  
+  // Most Stripe operations interact with the Stripe API (open world)
+  annotations.openWorldHint = true;
+  
+  return annotations;
+}
+
+/**
+ * Format a tool title from an operationId
+ */
+function formatToolTitle(operationId: string): string {
+  if (!operationId) return 'Unknown Tool';
+  
+  // For operations like "customers.create", convert to "Create Customer"
+  if (operationId.includes('.')) {
+    const [resource, action] = operationId.split('.');
+    
+    // Handle resources with underscores by replacing them with spaces
+    const formattedResource = resource
+      .replace(/_/g, ' ') // Replace underscores with spaces
+      .split(' ')
+      .map(part => capitalizeString(part))
+      .join(' ');
+    
+    return capitalizeString(action) + ' ' + singularize(formattedResource);
+  }
+  
+  // For operations like "createCustomer", convert to "Create Customer"
+  return operationId
+    .replace(/([A-Z])/g, ' $1') // Add spaces before capital letters
+    .replace(/^./, s => s.toUpperCase()) // Capitalize first letter
+    .trim();
+}
+
+/**
+ * Determine if an operation is destructive
+ */
+function isDestructiveOperation(operation: IParsedEndpoint): boolean {
+  const method = operation.method.toUpperCase();
+  
+  // DELETE operations are always destructive
+  if (method === 'DELETE') {
+    return true;
+  }
+  
+  // Check if operation contains destructive keywords
+  const destructiveKeywords = ['delete', 'remove', 'cancel', 'void', 'expire'];
+  const hasDestructiveKeyword = destructiveKeywords.some(keyword => 
+    operation.operationId.toLowerCase().includes(keyword)
+  );
+  
+  if (hasDestructiveKeyword) {
+    return true;
+  }
+  
+  // Most POST operations in Stripe aren't destructive, just creating or updating
+  return false;
+}
+
+// Helper function to determine if an operation is idempotent
+function isIdempotentOperation(operation: IParsedEndpoint): boolean {
+  const method = operation.method.toUpperCase();
+  
+  // GET, PUT operations are generally idempotent
+  if (method === 'GET' || method === 'PUT') {
+    return true;
+  }
+  
+  // DELETE might be idempotent if deleting the same resource twice has no effect
+  if (method === 'DELETE') {
+    return true;
+  }
+  
+  // Check specifically for idempotent POST operations in Stripe
+  if (method === 'POST') {
+    // Stripe's update operations are idempotent
+    if (operation.operationId.includes('update')) {
+      return true;
+    }
+    
+    // Some specific Stripe operations are idempotent with idempotency keys
+    // (This is a simplification; in reality, Stripe requires passing an Idempotency-Key header)
+    return false;
+  }
+  
+  return false;
+}
+
+// Helper function to convert a plural to singular
+function singularize(word: string): string {
+  if (word.endsWith('ies')) {
+    return word.slice(0, -3) + 'y';
+  } else if (word.endsWith('s') && !word.endsWith('ss')) {
+    return word.slice(0, -1);
+  }
+  return word;
 }
 
 /**

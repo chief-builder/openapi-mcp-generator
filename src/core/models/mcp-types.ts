@@ -31,6 +31,7 @@ export interface IMCPTool extends IMCPCapability {
   returns: IMCPSchema;
   requiresAuth?: boolean;
   requiredScopes?: string[];
+  annotations?: IMCPToolAnnotations;
 }
 
 /**
@@ -50,6 +51,14 @@ export interface IMCPPrompt extends IMCPCapability {
 export interface IMCPPromptExample {
   parameters: any;
   result: any;
+}
+
+export interface IMCPToolAnnotations {
+  title?: string;              // Human-readable title for the tool
+  readOnlyHint?: boolean;      // If true, the tool does not modify its environment
+  destructiveHint?: boolean;   // If true, the tool may perform destructive updates
+  idempotentHint?: boolean;    // If true, repeated calls with same args have no additional effect
+  openWorldHint?: boolean;     // If true, tool interacts with external entities
 }
 
 /**
@@ -153,6 +162,25 @@ export interface IMCPToolCallRequest {
 export interface IMCPToolCallResponse {
   result: any;
 }
+
+export interface IMCPToolCallErrorResult {
+  isError: true;
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
+}
+
+export interface IMCPToolCallSuccessResult {
+  isError?: false;
+  content: Array<{
+    type: string;
+    text: string;
+  }>;
+}
+
+// Union type for tool call results
+export type IMCPToolCallResult = IMCPToolCallSuccessResult | IMCPToolCallErrorResult;
 
 /**
  * MCP Prompt Call Request
