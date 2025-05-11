@@ -19,18 +19,6 @@ This document demonstrates functional test results for both Stripe and PayPal MC
 - **API Integration**: Direct integration with PayPal's API endpoints
 - **JSON-RPC**: Full JSON-RPC 2.0 request/response protocol support
 
-## 🚀 Conclusion
-
-These tests confirm that the OpenAPI MCP Generator successfully creates fully functional MCP servers for both Stripe and PayPal APIs. The servers:
-
-1. Provide secure HTTP transport with proper error handling
-2. Implement the JSON-RPC protocol for MCP communication
-3. Dynamically map API operations to MCP tools
-4. Handle authentication appropriately for each provider
-5. Execute live API calls against provider endpoints
-6. Return well-structured responses to MCP tool calls
-
-This demonstrates the flexibility and robustness of the OpenAPI MCP Generator in supporting multiple payment providers with different authentication mechanisms and API structures.
 
 ## 🔷 Stripe MCP Server Test
 
@@ -183,3 +171,16 @@ Get order result: {
 
 [2025-05-11T19:07:04.143Z] Stopping server...
 ```
+
+## 🚀 Conclusion
+
+These tests confirm that the OpenAPI MCP Generator successfully creates fully functional MCP servers for both Stripe and PayPal APIs. The servers:
+
+1. Provide secure HTTP transport with proper error handling
+2. Implement the JSON-RPC protocol for MCP communication
+3. Dynamically map API operations to MCP tools
+4. Handle authentication appropriately for each provider
+5. Execute live API calls against provider endpoints
+6. Return well-structured responses to MCP tool calls
+
+This demonstrates the flexibility and robustness of the OpenAPI MCP Generator in supporting multiple payment providers with different authentication mechanisms and API structures.
