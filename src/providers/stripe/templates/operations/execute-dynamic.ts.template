@@ -1,0 +1,71 @@
+/**
+ * Execute dynamic operation for Stripe
+ * 
+ * This function dynamically executes a Stripe operation based on tool name and parameters
+ */
+private async executeDynamicOperation(
+  stripeHelper: StripeResourceHelper, 
+  toolName: string, 
+  parameters: any
+): Promise<any> {
+  console.log(`[StripeServer] Executing dynamic operation for tool: ${toolName}`);
+  
+  // Map prefixes to methods
+  const methodPrefixes: Record<string, string> = {
+    'get': 'retrieve',
+    'list': 'list',
+    'create': 'create',
+    'update': 'update',
+    'delete': 'del'
+  };
+  
+  // Try to extract resource and method from the tool name
+  let resource = '';
+  let methodName = '';
+  
+  // Check for method prefixes
+  for (const [prefix, method] of Object.entries(methodPrefixes)) {
+    if (toolName.startsWith(prefix)) {
+      methodName = method;
+      
+      // Extract resource name - remove prefix and convert to snake_case
+      let resourcePart = toolName.substring(prefix.length);
+      // Convert first letter to lowercase
+      resourcePart = resourcePart.charAt(0).toLowerCase() + resourcePart.slice(1);
+      // Convert camelCase to snake_case
+      resource = resourcePart.replace(/([A-Z])/g, '_$1').toLowerCase();
+      
+      // Handle pluralization (listX -> x)
+      if (prefix === 'list' && resource.endsWith('s')) {
+        resource = resource.slice(0, -1);
+      }
+      
+      console.log(`[StripeServer] Matched prefix "${prefix}" for resource "${resource}"`);
+      break;
+    }
+  }
+  
+  if (!resource || !methodName) {
+    throw new Error(`Unable to determine resource and method from tool name: ${toolName}`);
+  }
+  
+  // For some special resources, we need to adjust the resource name
+  // e.g., 'payment_intents' instead of 'payments'
+  if (resource === 'payment') {
+    resource = 'payment_intent';
+  } else if (resource === 'setup') {
+    resource = 'setup_intent';
+  }
+  
+  // Convert singular to plural for Stripe API resources
+  if (!resource.endsWith('s')) {
+    resource += 's';
+  }
+  
+  try {
+    // Use the Stripe resource helper to execute the method
+    return await stripeHelper.executeMethod(resource, methodName, parameters);
+  } catch (error) {
+    throw this.transformStripeError(error);
+  }
+}

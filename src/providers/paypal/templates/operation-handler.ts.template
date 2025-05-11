@@ -1,0 +1,29 @@
+/**
+   * ${description}
+   */
+  private async ${methodName}(params: any, authContext?: IMCPAuthContext): Promise<any> {
+   const paypal = this.getPayPalClient(authContext);
+   
+   try {
+ ${operationCode}
+   } catch (error) {
+     // Log the error for server-side debugging
+     console.error(`[PayPalServer] Error in ${methodName}:`, error);
+     
+     // Return an error result that follows the MCP tool error format
+     return {
+       isError: true,
+       content: [
+         {
+           type: 'text',
+           text: `Error: ${error.message}`
+         }
+       ],
+       error: {
+         code: error.name || 'paypal_error',
+         message: error.message,
+         details: error.details
+       }
+     };
+   }
+ }

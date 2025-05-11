@@ -1,0 +1,67 @@
+/**
+ * PayPal Types
+ * 
+ * Type definitions for working with the PayPal API.
+ */
+
+/**
+ * Simple PayPal client interface
+ */
+export interface PayPalClient {
+  token: string;
+  executeRequest: (method: string, path: string, data?: any) => Promise<any>;
+  get: (path: string) => Promise<any>;
+  post: (path: string, data: any) => Promise<any>;
+  put: (path: string, data: any) => Promise<any>;
+  delete: (path: string) => Promise<any>;
+}
+
+/**
+ * PayPal Error interface
+ */
+export interface PayPalError {
+  name: string;
+  message: string;
+  details?: Array<{
+    field: string;
+    issue: string;
+    location?: string;
+  }>;
+  debug_id?: string;
+  links?: Array<{
+    href: string;
+    rel: string;
+    method?: string;
+  }>;
+}
+
+/**
+ * Common PayPal order interface
+ */
+export interface PayPalOrder {
+  id: string;
+  status: string;
+  intent: string;
+  purchase_units: Array<{
+    reference_id?: string;
+    amount: {
+      currency_code: string;
+      value: string;
+    };
+  }>;
+  payer?: {
+    name?: {
+      given_name: string;
+      surname: string;
+    };
+    email_address?: string;
+    payer_id?: string;
+  };
+  create_time: string;
+  update_time?: string;
+  links: Array<{
+    href: string;
+    rel: string;
+    method: string;
+  }>;
+}

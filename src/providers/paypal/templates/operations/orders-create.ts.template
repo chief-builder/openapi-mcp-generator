@@ -1,0 +1,7 @@
+// Creating an order through PayPal Checkout API
+      const path = '/v2/checkout/orders';
+      
+      // Execute the request
+      const order = await paypal.post(path, params);
+      
+      return order;

@@ -1,0 +1,10 @@
+// Extract ID from params
+      const { id, ...updateParams } = params;
+      
+      // Format the path based on resource and ID
+      const path = '${version}/${resource}/' + id;
+      
+      // Execute the request
+      const ${resource} = await paypal.put(path, updateParams);
+      
+      return ${resource};

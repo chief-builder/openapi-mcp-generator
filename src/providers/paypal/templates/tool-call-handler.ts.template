@@ -1,0 +1,207 @@
+private async handleToolsCall(request: IMCPRequest): Promise<IMCPResponse> {
+   const toolCall = request.params as IMCPToolCallRequest;
+   
+   if (!toolCall.tool) {
+     return this.createErrorResponse(request.id, -32602, 'Invalid params', { message: 'Tool name is required' });
+   }
+   
+   console.log(`[PayPalServer] Handling tool call: ${toolCall.tool}`);
+   
+   try {
+     // Get PayPal client
+     const paypal = this.getPayPalClient(request.authContext);
+     
+     try {
+       // Find the handler method for this tool
+       const handlerMethod = this[toolCall.tool];
+       
+       if (typeof handlerMethod === 'function') {
+         console.log(`[PayPalServer] Found handler method for ${toolCall.tool}`);
+         // Execute the tool handler and get the result
+         const result = await handlerMethod.call(this, toolCall.parameters, request.authContext);
+         
+         // If result already has isError flag, it's a properly formatted error result
+         if (result && result.isError === true) {
+           // Return as is - the tool handler already created a proper error format
+           return this.createSuccessResponse(request.id, result);
+         }
+         
+         // Return success response
+         return this.createSuccessResponse(request.id, {
+           content: [
+             {
+               type: 'text',
+               text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+             }
+           ]
+         });
+       }
+       
+       console.log(`[PayPalServer] No direct handler found for ${toolCall.tool}, trying orders operation`);
+       
+       // Special handling for PayPal Orders API tools
+       if (toolCall.tool.startsWith('orders')) {
+         try {
+           const result = await this.executeOrdersOperation(paypal, toolCall.tool, toolCall.parameters);
+           return this.createSuccessResponse(request.id, {
+             content: [
+               {
+                 type: 'text',
+                 text: JSON.stringify(result, null, 2)
+               }
+             ]
+           });
+         } catch (orderError) {
+           console.error(`[PayPalServer] Error executing orders operation:`, orderError);
+           return this.createSuccessResponse(request.id, {
+             isError: true,
+             content: [
+               {
+                 type: 'text',
+                 text: `Order operation error: ${orderError.message}`
+               }
+             ]
+           });
+         }
+       }
+       
+       // If we reach here, no handler was found
+       return this.createSuccessResponse(request.id, {
+         isError: true,
+         content: [
+           {
+             type: 'text',
+             text: `Tool not supported: ${toolCall.tool}`
+           }
+         ]
+       });
+     } catch (toolError) {
+       console.error(`[PayPalServer] Error in tool execution:`, toolError);
+       // Return tool-level error in tool result format
+       return this.createSuccessResponse(request.id, {
+         isError: true,
+         content: [
+           {
+             type: 'text',
+             text: `Tool execution error: ${toolError.message}`
+           }
+         ]
+       });
+     }
+   } catch (error) {
+     console.error(`[PayPalServer] Server error:`, error);
+     // Only use JSON-RPC error for severe protocol-level errors
+     return this.createErrorResponse(
+       request.id,
+       -32603,
+       'Internal error',
+       { message: error.message }
+     );
+   }
+ }
+
+/**
+ * Execute PayPal Orders API operations
+ */
+private async executeOrdersOperation(client: PayPalClient, toolName: string, parameters: any): Promise<any> {
+  console.log(`[PayPalServer] Executing Orders API operation: ${toolName}`);
+  
+  // Regular expression to match orders tool pattern
+  // Example: "ordersCreate" -> operation = "Create"
+  const match = toolName.match(/^orders([A-Z][a-zA-Z]+)$/);
+  if (!match) {
+    throw new Error(`Invalid Orders API tool name: ${toolName}`);
+  }
+  
+  // Get the operation (e.g., "Create", "Get", "Patch")
+  const operation = match[1];
+  console.log(`[PayPalServer] Extracted operation: ${operation}`);
+  
+  // Base path for the Orders API
+  let path = '/v2/checkout/orders';
+  
+  switch (operation.toLowerCase()) {
+    case 'create':
+      console.log(`[PayPalServer] Creating order`);
+      return await client.post(path, parameters);
+      
+    case 'get':
+      if (!parameters.id) {
+        throw new Error('Order ID is required for ordersGet operation');
+      }
+      console.log(`[PayPalServer] Getting order: ${parameters.id}`);
+      return await client.get(`${path}/${parameters.id}`);
+      
+    case 'patch':
+      if (!parameters.id) {
+        throw new Error('Order ID is required for ordersPatch operation');
+      }
+      console.log(`[PayPalServer] Patching order: ${parameters.id}`);
+      const { id, ...patchParams } = parameters;
+      return await client.executeRequest('PATCH', `${path}/${id}`, patchParams);
+      
+    case 'confirm':
+      if (!parameters.id) {
+        throw new Error('Order ID is required for ordersConfirm operation');
+      }
+      console.log(`[PayPalServer] Confirming order: ${parameters.id}`);
+      return await client.post(`${path}/${parameters.id}/confirm`, parameters);
+      
+    case 'authorize':
+      if (!parameters.id) {
+        throw new Error('Order ID is required for ordersAuthorize operation');
+      }
+      console.log(`[PayPalServer] Authorizing order: ${parameters.id}`);
+      return await client.post(`${path}/${parameters.id}/authorize`, parameters);
+      
+    case 'capture':
+      if (!parameters.id) {
+        throw new Error('Order ID is required for ordersCapture operation');
+      }
+      console.log(`[PayPalServer] Capturing order: ${parameters.id}`);
+      return await client.post(`${path}/${parameters.id}/capture`, parameters);
+      
+    case 'trackcreate':
+      if (!parameters.id) {
+        throw new Error('Order ID is required for ordersTrackCreate operation');
+      }
+      console.log(`[PayPalServer] Creating order tracking: ${parameters.id}`);
+      return await client.post(`${path}/${parameters.id}/track`, parameters);
+      
+    case 'trackerspatch':
+      if (!parameters.id || !parameters.tracker_id) {
+        throw new Error('Order ID and tracker ID are required for ordersTrackersPatch operation');
+      }
+      console.log(`[PayPalServer] Patching order tracker: ${parameters.id}/${parameters.tracker_id}`);
+      return await client.executeRequest('PATCH', `${path}/${parameters.id}/trackers/${parameters.tracker_id}`, parameters);
+      
+    default:
+      throw new Error(`Unknown Orders API operation: ${operation}`);
+  }
+}
+
+/**
+ * Create a success response
+ */
+private createSuccessResponse(id: string, result: any): IMCPResponse {
+  return {
+    jsonrpc: '2.0',
+    id,
+    result
+  };
+}
+
+/**
+ * Create an error response
+ */
+private createErrorResponse(id: string, code: number, message: string, data?: any): IMCPResponse {
+  return {
+    jsonrpc: '2.0',
+    id,
+    error: {
+      code,
+      message,
+      data
+    }
+  };
+}

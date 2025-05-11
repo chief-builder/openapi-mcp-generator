@@ -1,0 +1,11 @@
+if (!params.id) {
+        throw new Error('Order ID is required');
+      }
+      
+      // Capture an order through PayPal Checkout API
+      const path = `/v2/checkout/orders/${params.id}/capture`;
+      
+      // Execute the request
+      const captureResult = await paypal.post(path, {});
+      
+      return captureResult;

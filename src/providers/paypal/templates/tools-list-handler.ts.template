@@ -1,0 +1,26 @@
+private handleToolsList(request: IMCPRequest): IMCPResponse {
+   // Get pre-mapped tools with annotations
+   const tools = ${toolsJson};
+   
+   // Ensure each tool has annotations properly set
+   const toolsWithAnnotations = tools.map(tool => {
+     // If annotations are already set from the parameter mapper, use those
+     return tool;
+   });
+   
+   return {
+     jsonrpc: '2.0',
+     id: request.id,
+     result: {
+       tools: toolsWithAnnotations
+     }
+   };
+ }
+
+ // Helper to format tool titles for UI display if needed
+ private formatToolTitle(toolName: string): string {
+   return toolName
+     .replace(/([A-Z])/g, ' $1') // Add spaces before capital letters
+     .replace(/^./, s => s.toUpperCase()) // Capitalize first letter
+     .trim();
+ }
