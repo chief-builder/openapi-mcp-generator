@@ -22,10 +22,12 @@ out-tsc/
 .env.development.local
 .env.test.local
 .env.production.local
+.paypal-credentials
 
 # Logs
 logs
 *.log
+*_test_output.txt
 
 # OS specific
 .DS_Store
@@ -33,6 +35,17 @@ Thumbs.db
 
 # Test coverage
 coverage/
+
+# Generated output directories
+output/
 test-output/
-test-output-provider/
-test-output-pg/
+test-output-*/
+stripe-mcp/
+paypal-payment-server/
+*-payment-server/
+*-mcp-server/
+*-mcp/
+test-output-paypal/
+test-output-paypal-orders/
+test-output-simple/
+test-output-server/
