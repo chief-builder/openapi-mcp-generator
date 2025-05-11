@@ -12,7 +12,8 @@ import {
   IMCPTool, 
   IAuthProviderConfig, 
   IProviderConfig,
-  MCPCapabilityType
+  MCPCapabilityType,
+  OpenAPIParser
 } from '../../core';
 import { IHandlerGenerationOptions } from '../../core/models/generator-types';
 import {
@@ -441,89 +442,42 @@ private pathToMethodName(path: string): string {
 
 /**
  * Extract extensions from object
+ * Uses the shared parser implementation
  */
 private extractExtensions(obj: any): Record<string, any> {
-  const extensions: Record<string, any> = {};
-  
-  for (const [key, value] of Object.entries(obj)) {
-    if (key.startsWith('x-')) {
-      extensions[key] = value;
-    }
-  }
-  
-  return extensions;
+  // Create a parser instance just for using its utility methods
+  // Enable customExtensions option to ensure we get all x- prefixed properties
+  const parser = new OpenAPIParser(this, { customExtensions: true });
+  return parser.extractExtensions(obj);
 }
 
 /**
  * Parse parameters from OpenAPI spec
+ * Uses the shared parser implementation
  */
 private parseParameters(operationParams: any[] = [], pathParams: any[] = []): any[] {
-  // Combine path and operation parameters
-  const params = [...(pathParams || []), ...(operationParams || [])];
-  
-  // Process each parameter
-  return params.map(param => {
-    if ('$ref' in param) {
-      // Handle references (simplified)
-      return {
-        name: 'reference',
-        required: false,
-        schema: {},
-        in: 'query'
-      };
-    }
-    
-    return {
-      name: param.name,
-      required: param.required || false,
-      schema: param.schema || {},
-      in: param.in,
-      description: param.description
-    };
-  });
+  // Create a parser instance just for using its utility methods
+  const parser = new OpenAPIParser(this, {});
+  return parser.parseParameters(operationParams, pathParams);
 }
 
 /**
  * Parse request body from OpenAPI spec
+ * Uses the shared parser implementation
  */
 private parseRequestBody(requestBody: any): any {
-  if ('$ref' in requestBody) {
-    // Handle references (simplified)
-    return {
-      required: false,
-      content: {}
-    };
-  }
-  
-  return {
-    required: requestBody.required || false,
-    content: requestBody.content || {}
-  };
+  // Create a parser instance just for using its utility methods
+  const parser = new OpenAPIParser(this, {});
+  return parser.parseRequestBody(requestBody);
 }
 
 /**
  * Parse responses from OpenAPI spec
+ * Uses the shared parser implementation
  */
 private parseResponses(responses: any): Record<string, any> {
-  const result: Record<string, any> = {};
-  
-  for (const [statusCode, responseObj] of Object.entries(responses)) {
-    const response = responseObj as any;
-    
-    if (response && '$ref' in response) {
-      // Handle references (simplified)
-      result[statusCode] = {
-        description: 'Reference'
-      };
-      continue;
-    }
-    
-    result[statusCode] = {
-      description: response && response.description ? response.description : '',
-      content: response && response.content ? response.content : undefined
-    };
-  }
-  
-  return result;
+  // Create a parser instance just for using its utility methods
+  const parser = new OpenAPIParser(this, {});
+  return parser.parseResponses(responses);
 }
 }

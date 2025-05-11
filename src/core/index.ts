@@ -6,6 +6,7 @@
 export * from './models/mcp-types';
 export * from './models/parser-types';
 export * from './models/provider';
+export * from './models/base-provider';
 export * from './models/generator-types';
 export * from './models/naming-conventions';
 
@@ -17,3 +18,9 @@ export * from './generator/mcp-generator';
 
 // Registry
 export * from './registry/provider-registry';
+
+// Utils
+export * from './utils/template-loader';
+export * from './utils/template-handler';
+export * from './utils/string-utils';
+export * from './utils/api-utils';

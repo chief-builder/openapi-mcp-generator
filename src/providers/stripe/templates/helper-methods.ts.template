@@ -1,60 +1,40 @@
-  /**
-   * Get Stripe client and helper with the current API key
-   * 
-   * @param authContext Authentication context with API key
-   * @returns Stripe client and helper
-   * @throws Error if the client is not initialized
-   */
-  private getStripeClientAndHelper(authContext?: IMCPAuthContext): { 
-    client: StripeClient; 
-    helper: StripeResourceHelperImpl;
-  } {
-    // Use auth context API key if available and different from current
-    if (authContext?.apiKey && this.stripe?.apiKey !== authContext.apiKey) {
-      this.initializeStripeClient(authContext.apiKey);
-    }
-    
-    if (!this.stripe || !this.stripeHelper) {
-      throw new Error('Stripe client not initialized');
-    }
-    
-    return {
-      client: this.stripe,
-      helper: this.stripeHelper
-    };
-  }
-  
-  /**
-   * Get Stripe client with the current API key
-   * (Legacy method for backward compatibility)
+/**
+   * Get Stripe client from the instance
    * 
    * @param authContext Authentication context with API key
    * @returns Stripe client instance
    * @throws Error if the client is not initialized
    */
   private getStripeClient(authContext?: IMCPAuthContext): StripeClient {
-    return this.getStripeClientAndHelper(authContext).client;
+    // Use auth context token if available and different from current
+    // This allows per-request API keys
+    if (authContext?.token) {
+      // We don't actually change the Stripe client per request
+      // Just validate that we have a token
+      if (!this.stripe) {
+        this.initializeStripeClient(authContext.token);
+      }
+    }
+    
+    if (!this.stripe) {
+      throw new Error('Stripe client not initialized. Please provide a valid API key.');
+    }
+    
+    return this.stripe;
   }
   
   /**
-   * Initialize Stripe client
+   * Get Stripe resource helper
    * 
-   * @param apiKey Stripe API key
-   * @param apiVersion Optional Stripe API version
+   * @returns Stripe resource helper
+   * @throws Error if not initialized
    */
-  private initializeStripeClient(apiKey: string, apiVersion: string = '2023-10-16'): void {
-    try {
-      this.stripe = new Stripe(apiKey, {
-        apiVersion,
-      });
-      
-      // Initialize the resource helper
-      this.stripeHelper = new StripeResourceHelperImpl(this.stripe);
-    } catch (error) {
-      console.warn('[StripeProvider] Failed to initialize Stripe client:', (error as Error).message);
-      this.stripe = null;
-      this.stripeHelper = null;
+  private getStripeHelper(): StripeResourceHelper {
+    if (!this.stripeHelper) {
+      throw new Error('Stripe helper not initialized. Please provide a valid API key.');
     }
+    
+    return this.stripeHelper;
   }
   
   /**
@@ -70,19 +50,23 @@
       
       switch (stripeError.type) {
         case 'StripeCardError':
-          return new Error('Card error: ' + stripeError.message);
+          return new Error(`Card error: ${stripeError.message}`);
         case 'StripeInvalidRequestError':
-          return new Error('Invalid request: ' + stripeError.message);
+          return new Error(`Invalid request: ${stripeError.message}`);
         case 'StripeAuthenticationError':
-          return new Error('Authentication error: ' + stripeError.message);
+          return new Error(`Authentication error: ${stripeError.message}`);
         case 'StripeAPIError':
-          return new Error('API error: ' + stripeError.message);
+          return new Error(`API error: ${stripeError.message}`);
         case 'StripeConnectionError':
-          return new Error('Connection error: ' + stripeError.message);
+          return new Error(`Connection error: ${stripeError.message}`);
         case 'StripeRateLimitError':
-          return new Error('Rate limit error: ' + stripeError.message);
+          return new Error(`Rate limit error: ${stripeError.message}`);
+        case 'StripeIdempotencyError':
+          return new Error(`Idempotency error: ${stripeError.message}`);
+        case 'StripeInvalidGrantError':
+          return new Error(`Invalid grant: ${stripeError.message}`);
         default:
-          return new Error('Stripe error: ' + stripeError.message);
+          return new Error(`Stripe error: ${stripeError.message}`);
       }
     }
     

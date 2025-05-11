@@ -34,6 +34,8 @@ The OpenAPI MCP Generator transforms standard OpenAPI specifications into fully 
 - **Authentication Support**: Automatic generation of auth providers based on OpenAPI security schemes
 - **Tool Mapping**: Maps OpenAPI operations to MCP tools with appropriate schemas
 - **Stripe Integration**: Built-in support for the Stripe API
+- **Enhanced Security**: Transport security features including CORS protection, rate limiting, and request validation
+- **Multiple Transport Options**: Support for HTTP, stdio (coming soon), and SSE (coming soon) transports
 
 ## Installation
 

@@ -98,14 +98,74 @@ export interface IMCPAuthContext {
 /**
  * MCP Server Configuration
  */
+/**
+ * MCP Server Security Configuration
+ */
+export interface IMCPServerSecurityConfig {
+  /**
+   * Whether to bind the server to localhost only (127.0.0.1)
+   * This is recommended for security to prevent remote access
+   * Default: true
+   */
+  bindToLocalhost?: boolean;
+
+  /**
+   * List of allowed origins for CORS
+   * If not specified, only localhost origins are allowed
+   * Set to ['*'] to allow all origins (not recommended)
+   * Example: ['http://localhost:3000', 'https://example.com']
+   */
+  allowedOrigins?: string[];
+
+  /**
+   * Request timeout in milliseconds
+   * Default: 30000 (30 seconds)
+   */
+  requestTimeoutMs?: number;
+
+  /**
+   * Maximum request body size in bytes
+   * Default: 1048576 (1 MB)
+   */
+  maxRequestBodySize?: number;
+
+  /**
+   * Whether to validate content type header
+   * Default: true
+   */
+  validateContentType?: boolean;
+
+  /**
+   * Rate limit configuration
+   */
+  rateLimit?: {
+    /**
+     * Maximum number of requests per minute
+     * Default: 100
+     */
+    maxRequestsPerMinute?: number;
+
+    /**
+     * Window size in milliseconds for rate limiting
+     * Default: 60000 (1 minute)
+     */
+    windowMs?: number;
+  };
+}
+
 export interface IMCPServerConfig {
   serverName: string;
   serverVersion: string;
   serverDescription?: string;
-  transport: 'http' | 'stdio';
+  transport: 'http' | 'stdio' | 'sse';
   httpPort?: number;
   supportedMethods?: string[];
   authProviders?: IMCPAuthProvider[];
+
+  /**
+   * Security configuration
+   */
+  security?: IMCPServerSecurityConfig;
 }
 
 /**

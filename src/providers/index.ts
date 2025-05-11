@@ -4,38 +4,32 @@
  * This file imports and registers all available providers.
  */
 
-import { ProviderRegistry } from '../core';
+const { ProviderRegistry } = require('../core');
+const { StripeProvider } = require('./stripe');
+const { PayPalProvider } = require('./paypal/provider');
 
-// Try to import providers, but don't fail if they're not available
-let StripeProvider: any;
+// Register the Stripe provider
 try {
-  // Import providers dynamically
-  const stripeModule = require('./stripe');
-  StripeProvider = stripeModule.StripeProvider;
-  
-  // Register providers
-  if (StripeProvider) {
-    ProviderRegistry.registerProvider(new StripeProvider());
-    console.log('Registered Stripe provider');
-  }
+  console.log('Registering Stripe provider...');
+  const stripeProvider = new StripeProvider();
+  ProviderRegistry.registerProvider(stripeProvider);
+  console.log('Registered Stripe provider');
 } catch (error) {
-  console.warn('Warning: Stripe provider could not be loaded');
+  console.warn('Warning: Stripe provider could not be loaded', error);
 }
 
-// This function can be used to register additional providers dynamically
-export function registerProvider(providerModule: string, providerName?: string) {
-  try {
-    const module = require(providerModule);
-    const ProviderClass = module[providerName || 'Provider'];
-    
-    if (ProviderClass) {
-      ProviderRegistry.registerProvider(new ProviderClass());
-      console.log(`Registered provider from ${providerModule}`);
-      return true;
-    }
-  } catch (error) {
-    console.warn(`Warning: Provider could not be loaded from ${providerModule}`);
-  }
-  
-  return false;
+// Register the PayPal provider
+try {
+  console.log('Registering PayPal provider...');
+  const paypalProvider = new PayPalProvider();
+  ProviderRegistry.registerProvider(paypalProvider);
+  console.log('Registered PayPal provider');
+} catch (error) {
+  console.warn('Warning: PayPal provider could not be loaded', error);
 }
+
+// Export the providers
+module.exports = {
+  StripeProvider,
+  PayPalProvider
+};

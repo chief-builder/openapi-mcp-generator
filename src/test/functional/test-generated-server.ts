@@ -16,7 +16,7 @@ import fetch from 'node-fetch';
 // Configuration
 const config = {
   // Path to the generated server (relative to the project root)
-  serverPath: path.resolve(process.cwd(), 'output', 'stripe-mcp-server'),
+  serverPath: path.resolve(process.cwd(), '.', 'stripe-mcp'),
   
   // Port to run the server on
   serverPort: 9090,

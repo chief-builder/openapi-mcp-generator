@@ -1,323 +1,103 @@
 private async handleToolsCall(request: IMCPRequest): Promise<IMCPResponse> {
-   const toolCall = request.params as IMCPToolCallRequest;
-   
-   if (!toolCall.tool) {
-     return this.createErrorResponse(request.id, -32602, 'Invalid params', { message: 'Tool name is required' });
-   }
-   
-   try {
-     // Get Stripe client and helper
-     const { client: stripe, helper } = this.getStripeClientAndHelper(request.authContext);
-     
-     try {
-       // Find the handler method for this tool
-       const handlerMethod = this[toolCall.tool];
-       
-       if (typeof handlerMethod === 'function') {
-         // Execute the tool handler and get the result
-         const result = await handlerMethod.call(this, toolCall.parameters, request.authContext);
-         
-         // If result already has isError flag, it's a properly formatted error result
-         if (result && result.isError === true) {
-           // Return as is - the tool handler already created a proper error format
-           return this.createSuccessResponse(request.id, result);
-         }
-         
-         // Return success response
-         return this.createSuccessResponse(request.id, {
-           content: [
-             {
-               type: 'text',
-               text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
-             }
-           ]
-         });
-       }
-       
-       // If direct method not found, try to dynamically determine how to handle it
-       const methodMatch = toolCall.tool.match(/^(get|post|delete)(.*?)$/);
-       
-       if (methodMatch) {
-         const httpMethod = methodMatch[1];
-         const resourcePath = methodMatch[2];
-         
-         try {
-           // Try to execute the operation using the helper
-           const result = await this.executeDynamicOperation(helper, httpMethod, resourcePath, toolCall.parameters);
-           
-           if (result) {
-             // Return success response
-             return this.createSuccessResponse(request.id, {
-               content: [
-                 {
-                   type: 'text',
-                   text: JSON.stringify(result, null, 2)
-                 }
-               ]
-             });
-           }
-         } catch (operationError) {
-           // Return error response in tool result format (not as JSON-RPC error)
-           return this.createSuccessResponse(request.id, {
-             isError: true,
-             content: [
-               {
-                 type: 'text',
-                 text: `Operation error: ${operationError.message}`
-               }
-             ]
-           });
-         }
-       }
-       
-       // If we reach here, no handler was found
-       return this.createSuccessResponse(request.id, {
-         isError: true,
-         content: [
-           {
-             type: 'text',
-             text: `Tool not supported: ${toolCall.tool}`
-           }
-         ]
-       });
-     } catch (toolError) {
-       // Return tool-level error in tool result format
-       return this.createSuccessResponse(request.id, {
-         isError: true,
-         content: [
-           {
-             type: 'text',
-             text: `Tool execution error: ${toolError.message}`
-           }
-         ]
-       });
-     }
-   } catch (error) {
-     // Only use JSON-RPC error for severe protocol-level errors
-     return this.createErrorResponse(
-       request.id,
-       -32603,
-       'Internal error',
-       { message: error.message }
-     );
-   }
- }
-
-/**
- * Handle common customer operations that are specifically used in tests
- */
-private async executeCustomerOperations(helper: StripeResourceHelperImpl, toolCall: IMCPToolCallRequest): Promise<any> {
-  switch (toolCall.tool) {
-    case 'postCustomers':
-      return await helper.executeMethod('customers', 'create', toolCall.parameters);
-    case 'getCustomers':
-      return await helper.executeMethod('customers', 'list', toolCall.parameters);
-    case 'getCustomersCustomer':
-      return await helper.executeMethod('customers', 'retrieve', toolCall.parameters.id);
-    case 'postCustomersCustomer':
-      const { id, ...updateParams } = toolCall.parameters;
-      return await helper.executeMethod('customers', 'update', id, updateParams);
-    case 'deleteCustomersCustomer':
-      return await helper.executeMethod('customers', 'del', toolCall.parameters.id);
-    default:
-      return null; // Not a common customer operation
-  }
-}
-
- private async executeDynamicOperation(helper: StripeResourceHelper, httpMethod: string, resourcePath: string, parameters: any): Promise<any> {
-   // Convert camelCase resourcePath to segments
-   const segments = resourcePath.replace(/([a-z0-9])([A-Z])/g, '$1.$2').toLowerCase().split('.');
-   
-   // Determine resource and method
-   const resource = segments[0];
-   
-   // Determine the method based on HTTP method
-   let methodName: string;
-   switch (httpMethod.toLowerCase()) {
-     case 'get':
-       methodName = parameters.id ? 'retrieve' : 'list';
-       break;
-     case 'post':
-       methodName = 'create';
-       break;
-     case 'delete':
-       methodName = 'del';
-       break;
-     default:
-       methodName = segments.length > 1 ? segments[1] : '';
-   }
-   
-   // Execute the operation
-   try {
-     return await helper.executeMethod(resource, methodName, parameters);
-   } catch (error) {
-     // Format and rethrow the error to be caught by the caller
-     const stripeError = error as any;
-     throw new Error(stripeError.message || 'Stripe operation failed');
-   }
- }
-
-/**
- * Execute a Stripe operation based on HTTP method and path segments
- */
-private async executeOperation(helper: StripeResourceHelperImpl, httpMethod: string, segments: string[], parameters: any): Promise<any> {
-  const primaryResource = segments[0].toLowerCase();
+  const toolCall = request.params as IMCPToolCallRequest;
   
-  // Handle simple operations with 1-2 segments based on HTTP method
-  if (segments.length <= 2) {
-    return await this.executeSimpleOperation(helper, httpMethod, segments, parameters);
+  if (!toolCall.tool) {
+    return this.createErrorResponse(request.id, -32602, 'Invalid params', { message: 'Tool name is required' });
   }
   
-  // Handle complex operations with more segments
-  return await this.executeComplexOperation(helper, httpMethod, segments, parameters);
-}
-
-/**
- * Execute simple Stripe operations (1-2 path segments)
- */
-private async executeSimpleOperation(helper: StripeResourceHelperImpl, httpMethod: string, segments: string[], parameters: any): Promise<any> {
-  const primaryResource = segments[0].toLowerCase();
+  console.log(`[StripeServer] Handling tool call: ${toolCall.tool}`);
   
-  if (segments.length === 1) {
-    // Single resource operations (list/create)
-    if (httpMethod === 'get') {
-      return await helper.executeMethod(primaryResource, 'list', parameters);
-    } else if (httpMethod === 'post') {
-      return await helper.executeMethod(primaryResource, 'create', parameters);
-    }
-  } else if (segments.length === 2) {
-    const secondSegment = segments[1].toLowerCase();
-    
-    // Check if this is a resource/id pattern (e.g. customers/customer)
-    if (secondSegment === primaryResource.slice(0, -1)) {
-      // Resource/id operations
-      if (httpMethod === 'get') {
-        return await helper.executeMethod(primaryResource, 'retrieve', parameters.id);
-      } else if (httpMethod === 'post') {
-        const { id, ...updateParams } = parameters;
-        return await helper.executeMethod(primaryResource, 'update', id, updateParams);
-      } else if (httpMethod === 'delete') {
-        return await helper.executeMethod(primaryResource, 'del', parameters.id);
-      }
-    } else {
-      // For other operations like charges/capture, use the resource helper
-      // to ensure proper mapping between OpenAPI and SDK names
-      try {
-        if (httpMethod === 'post') {
-          return await helper.executeMethod(primaryResource, secondSegment, parameters);
-        } else if (httpMethod === 'get') {
-          return await helper.executeMethod(primaryResource, secondSegment, parameters);
-        } else if (httpMethod === 'delete') {
-          const delMethod = 'del' + secondSegment.charAt(0).toUpperCase() + secondSegment.slice(1);
-          return await helper.executeMethod(primaryResource, delMethod, parameters.id);
-        }
-      } catch (error) {
-        // If the direct method doesn't exist, try a nested resource
-        const nestedResource = `${primaryResource}_${secondSegment}`;
-        if (httpMethod === 'get') {
-          return await helper.executeMethod(nestedResource, 'list', parameters);
-        } else if (httpMethod === 'post') {
-          return await helper.executeMethod(nestedResource, 'create', parameters);
-        }
-      }
-    }
-  }
-  
-  return null; // Operation not handled
-}
-
-/**
- * Execute complex Stripe operations (3+ path segments)
- */
-private async executeComplexOperation(helper: StripeResourceHelperImpl, httpMethod: string, segments: string[], parameters: any): Promise<any> {
   try {
-    // Try to handle as a nested resource with path mapping
-    // Example: "customers/customer/sources" => "customers.sources.create"
+    // Get Stripe client
+    const stripe = this.getStripeClient(request.authContext);
+    // Get Stripe helper
+    const stripeHelper = this.getStripeHelper();
     
-    // Build the full resource path by joining all segments except the last one
-    const resourceSegments = segments.slice(0, -1);
-    let resourcePath = resourceSegments.join('_').toLowerCase();
-    
-    // The last segment is typically the method or sub-resource
-    const lastSegment = segments[segments.length - 1].toLowerCase();
-    
-    // Determine the method based on HTTP method and last segment
-    let methodName: string;
-    if (httpMethod === 'get') {
-      // Check if this is a retrieve or list operation
-      methodName = parameters.id ? 'retrieve' : 'list';
-    } else if (httpMethod === 'post') {
-      methodName = 'create';
-    } else if (httpMethod === 'delete') {
-      methodName = 'del';
-    } else {
-      methodName = lastSegment;
-    }
-    
-    // Try executing the operation using the helper
-    return await helper.executeMethod(resourcePath, methodName, parameters.id || parameters);
-  } catch (error) {
-    // Fallback to a more dynamic approach if the direct mapping failed
     try {
-      const primaryResource = segments[0].toLowerCase();
+      // Find the handler method for this tool
+      const handlerMethod = this[toolCall.tool];
       
-      // Try to create a composite resource name from all segments
-      let compositeResource = '';
-      for (let i = 0; i < segments.length - 1; i++) {
-        if (i === 0) {
-          compositeResource = segments[i].toLowerCase();
-        } else {
-          // Join using underscores for snake_case
-          compositeResource += '_' + segments[i].toLowerCase();
+      if (typeof handlerMethod === 'function') {
+        console.log(`[StripeServer] Found handler method for ${toolCall.tool}`);
+        // Execute the tool handler and get the result
+        const result = await handlerMethod.call(this, toolCall.parameters, request.authContext);
+        
+        // If result already has isError flag, it's a properly formatted error result
+        if (result && result.isError === true) {
+          // Return as is - the tool handler already created a proper error format
+          return this.createSuccessResponse(request.id, result);
         }
+        
+        // Return success response
+        return this.createSuccessResponse(request.id, {
+          content: [
+            {
+              type: 'text',
+              text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
+            }
+          ]
+        });
       }
       
-      // The last segment is the method name
-      const methodSegment = segments[segments.length - 1].toLowerCase();
+      console.log(`[StripeServer] No direct handler found for ${toolCall.tool}, trying dynamic execution`);
       
-      // Determine the method based on HTTP method
-      let methodName: string;
-      if (httpMethod === 'get') {
-        methodName = parameters.id ? 'retrieve' : 'list';
-      } else if (httpMethod === 'post') {
-        methodName = methodSegment;
-      } else if (httpMethod === 'delete') {
-        methodName = 'del';
-      } else {
-        methodName = methodSegment;
+      // Try to execute the operation dynamically using the Stripe resource helper
+      try {
+        // Parse the tool name to determine the resource and operation
+        const result = await this.executeDynamicOperation(stripeHelper, toolCall.tool, toolCall.parameters);
+        
+        return this.createSuccessResponse(request.id, {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify(result, null, 2)
+            }
+          ]
+        });
+      } catch (operationError) {
+        console.error(`[StripeServer] Error executing dynamic operation:`, operationError);
+        return this.createSuccessResponse(request.id, {
+          isError: true,
+          content: [
+            {
+              type: 'text',
+              text: `Operation error: ${operationError.message}`
+            }
+          ]
+        });
       }
       
-      // Try to execute the operation
-      return await helper.executeMethod(compositeResource, methodName, parameters.id || parameters);
-    } catch (innerError) {
-      // If all approaches fail, return null to indicate the operation is not handled
-      return null;
+      // If we reach here, no handler was found
+      return this.createSuccessResponse(request.id, {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: `Tool not supported: ${toolCall.tool}`
+          }
+        ]
+      });
+    } catch (toolError) {
+      console.error(`[StripeServer] Error in tool execution:`, toolError);
+      // Return tool-level error in tool result format
+      return this.createSuccessResponse(request.id, {
+        isError: true,
+        content: [
+          {
+            type: 'text',
+            text: `Tool execution error: ${toolError.message}`
+          }
+        ]
+      });
     }
+  } catch (error) {
+    console.error(`[StripeServer] Server error:`, error);
+    // Only use JSON-RPC error for severe protocol-level errors
+    return this.createErrorResponse(
+      request.id,
+      -32603,
+      'Internal error',
+      { message: error.message }
+    );
   }
-}
-
-/**
- * Create a success response
- */
-private createSuccessResponse(id: string, result: any): IMCPResponse {
-  return {
-    jsonrpc: '2.0',
-    id,
-    result
-  };
-}
-
-/**
- * Create an error response
- */
-private createErrorResponse(id: string, code: number, message: string, data?: any): IMCPResponse {
-  return {
-    jsonrpc: '2.0',
-    id,
-    error: {
-      code,
-      message,
-      data
-    }
-  };
 }
