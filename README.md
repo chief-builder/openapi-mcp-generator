@@ -1,6 +1,6 @@
 # OpenAPI MCP Generator
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
 A powerful tool for generating [Model Context Protocol (MCP)](https://github.com/anthropics/anthropic-cookbook/tree/main/mcp) servers from OpenAPI specifications. This tool enables seamless integration between OpenAPI-based services and AI assistants supporting the MCP protocol.
@@ -34,6 +34,7 @@ The OpenAPI MCP Generator transforms standard OpenAPI specifications into fully 
 - **Authentication Support**: Automatic generation of auth providers based on OpenAPI security schemes
 - **Tool Mapping**: Maps OpenAPI operations to MCP tools with appropriate schemas
 - **Stripe Integration**: Built-in support for the Stripe API
+- **PayPal Integration**: Built-in support for the PayPal API
 - **Enhanced Security**: Transport security features including CORS protection, rate limiting, and request validation
 - **Multiple Transport Options**: Support for HTTP, stdio (coming soon), and SSE (coming soon) transports
 
@@ -41,7 +42,7 @@ The OpenAPI MCP Generator transforms standard OpenAPI specifications into fully 
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/openapi-mcp-generator.git
+git clone https://github.com/chief-builder/openapi-mcp-generator.git
 cd openapi-mcp-generator
 
 # Install dependencies
@@ -58,6 +59,21 @@ npm run build
 ```bash
 # Generate an MCP server for Stripe API
 npm run generate -- --provider=stripe --spec=./specs/stripe/openapi/spec3.json --output=./output/stripe-mcp
+```
+
+### Example: Generating a PayPal MCP Server
+
+```bash
+# Generate an MCP server for PayPal API
+npm run generate -- --provider=paypal --spec=./test-resources/paypal-spec.json --output=./output/paypal-mcp
+
+# Navigate to the output directory and install
+cd ./output/paypal-mcp
+npm install
+npm run build
+
+# Start the server with PayPal credentials
+PAYPAL_CLIENT_ID=your_client_id PAYPAL_CLIENT_SECRET=your_client_secret npm start
 ```
 
 ### Step 2: Install and start the generated server
@@ -149,6 +165,7 @@ The system currently supports the following providers:
 | Provider | Description                        | Status      |
 |----------|------------------------------------|-------------|
 | Stripe   | Stripe Payments API                | Implemented |
+| PayPal   | PayPal Payments and Orders API     | Implemented |
 | Generic  | Generic OpenAPI provider           | Planned     |
 | Custom   | Support for custom implementations | Supported   |
 
@@ -166,9 +183,11 @@ The system currently supports the following providers:
 │   │   ├── parser       # OpenAPI parser
 │   │   ├── registry     # Provider registry
 │   │   ├── templates    # Core templates
+│   │   ├── transports   # Transport implementations
 │   │   └── utils        # Utility functions
 │   ├── providers        # API providers
-│   │   └── stripe       # Stripe API implementation
+│   │   ├── stripe       # Stripe API implementation
+│   │   └── paypal       # PayPal API implementation
 │   └── test             # Tests
 └── output               # Generated servers
 ```
@@ -227,6 +246,66 @@ The generated servers can be customized in several ways:
 1. **Modify templates**: Edit template files in `src/core/templates/` or provider-specific templates
 2. **Add custom prompts**: Create custom prompts in the provider implementation
 3. **Extend the generated code**: Add additional functionality to generated servers
+
+## Transport Security
+
+The OpenAPI MCP Generator includes robust transport security features to protect your MCP servers:
+
+- **Localhost Binding**: By default, servers only accept connections from localhost
+- **CORS Protection**: Configurable allowed origins to prevent cross-site attacks
+- **Rate Limiting**: Protection against DoS attacks with customizable limits
+- **Request Size Limiting**: Prevents request body overflow attacks
+- **Content Type Validation**: Ensures proper content types for all requests
+- **Request Timeout**: Configurable timeouts to prevent resource exhaustion
+
+For detailed security configuration options and best practices, see the [Transport Security Guide](./docs/TRANSPORT-SECURITY.md).
+
+### Example Security Configuration
+
+```typescript
+const serverConfig = {
+  // Server configuration
+  serverName: "My Secure MCP Server",
+  serverVersion: "1.0.0",
+  transport: "http",
+  httpPort: 8080,
+
+  // Security configuration
+  security: {
+    bindToLocalhost: true,
+    allowedOrigins: ["https://myapp.example.com"],
+    maxRequestBodySize: 1048576, // 1MB
+    requestTimeoutMs: 30000,
+    validateContentType: true,
+    rateLimit: {
+      maxRequestsPerMinute: 100,
+      windowMs: 60000
+    }
+  }
+};
+```
+
+## Multi-Provider Support
+
+The OpenAPI MCP Generator now supports multiple API providers:
+
+- **Stripe**: For payment processing, subscriptions, and financial services
+- **PayPal**: For payment processing, orders, and checkout flows
+- **Custom Providers**: Extend the system with your own provider implementations
+
+Each provider includes specialized adapters for:
+
+- **Parameter Mapping**: Converts between OpenAPI parameters and provider-specific formats
+- **Handler Generation**: Creates optimized handlers for provider-specific operations
+- **Templates**: Provider-specific templates for generating specialized code
+- **Authentication**: Provider-specific authentication methods (API keys, OAuth, etc.)
+
+To use a specific provider, use the `--provider` flag when generating your MCP server:
+
+```bash
+npm run generate -- --provider=stripe --spec=./path/to/spec.json --output=./output/my-server
+npm run generate -- --provider=paypal --spec=./path/to/spec.json --output=./output/my-server
+```
 
 ## License
 
