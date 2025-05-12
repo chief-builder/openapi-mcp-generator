@@ -18,7 +18,7 @@ if (!fs.existsSync(PAYPAL_SPEC_PATH)) {
 // Run the generator CLI
 console.log('Generating PayPal MCP server...');
 try {
-  const command = `node dist/cli/index.js generate --spec ${PAYPAL_SPEC_PATH} --provider paypal --output ${OUTPUT_DIR}`;
+  const command = `npx ts-node src/cli/index.ts generate --spec ${PAYPAL_SPEC_PATH} --provider paypal --output ${OUTPUT_DIR}`;
   console.log(`Running command: ${command}`);
   
   const output = execSync(command, { encoding: 'utf8' });

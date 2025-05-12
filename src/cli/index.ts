@@ -7,6 +7,23 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { OpenAPIParser, MCPGenerator, ProviderRegistry } from '../core';
 
+// Import providers to ensure they're registered
+console.log('CLI initialization starting...');
+try {
+  // Import providers using require to ensure they're loaded
+  require('../providers');
+
+  // Check provider registry
+  console.log('Checking available providers...');
+  const providers = ProviderRegistry.getAllProviders();
+  console.log(`Found ${providers.length} providers:`);
+  providers.forEach(provider => {
+    console.log(`- ${provider.name} v${provider.version}`);
+  });
+} catch (error) {
+  console.error('Error loading providers:', error);
+}
+
 // Create CLI program
 const program = new Command();
 
@@ -15,6 +32,8 @@ program
   .description('Generate MCP servers from OpenAPI specifications')
   .version('0.1.0');
 
+console.log('Setting up CLI commands...');
+  
 program
   .command('generate')
   .description('Generate an MCP server from an OpenAPI specification')
@@ -27,6 +46,7 @@ program
   .option('-c, --config <path>', 'Configuration file')
   .action(async (options) => {
     try {
+      console.log('Generate command triggered');
       console.log('Generating MCP server...');
       
       // Check if provider is registered

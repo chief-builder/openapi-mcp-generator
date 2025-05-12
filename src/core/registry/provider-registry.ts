@@ -8,7 +8,16 @@ import { IProvider } from '../models/provider';
  * Registry for dynamically registering and retrieving providers
  */
 export class ProviderRegistry {
-  private static providers: Map<string, IProvider> = new Map();
+  // Use a private static field with explicit initialization
+  private static _providers: Map<string, IProvider> = new Map();
+  
+  // Use a getter to ensure the map is always initialized
+  private static get providers(): Map<string, IProvider> {
+    if (!ProviderRegistry._providers) {
+      ProviderRegistry._providers = new Map();
+    }
+    return ProviderRegistry._providers;
+  }
   
   /**
    * Register a provider
@@ -16,6 +25,7 @@ export class ProviderRegistry {
    * @param provider Provider to register
    */
   public static registerProvider(provider: IProvider): void {
+    console.log(`Registering provider: ${provider.name} v${provider.version}`);
     ProviderRegistry.providers.set(provider.name, provider);
   }
   
