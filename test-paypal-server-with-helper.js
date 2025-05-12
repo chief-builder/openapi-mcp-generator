@@ -12,14 +12,34 @@
 const http = require('http');
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 const helper = require('./paypal-test-helper');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+if (fs.existsSync('.env')) {
+  console.log('Loading environment variables from .env file');
+  dotenv.config();
+} else {
+  console.warn('No .env file found. Please create one with your PayPal API credentials.');
+  console.warn('See .env.sample for an example.');
+  process.exit(1);
+}
 
 // Configuration
-const SERVER_PORT = 9003; // Using 9003 to avoid conflicts
-// PayPal credentials
-const PAYPAL_CLIENT_ID = 'AQzDqSJwpN4AnVptgs4004XHuZ8e2gRJ41Mq1YxCeOk45-mHMjhCdZ3thvMoL6EvnZmuMvDEY2cEf4HT';
-const PAYPAL_CLIENT_SECRET = 'ELeU6i5p7ue0CFVlIqOsNFUuiaymhX1NHYKR2Zx9_tzqAh3GpGAqC3dTLC7Rz-Xl39ybQ_aH4Vnf1ESC';
-const SERVER_DIR = path.join(__dirname, 'paypal-payment-server-new');
+const SERVER_PORT = process.env.SERVER_PORT || 9003; // Using 9003 to avoid conflicts
+// PayPal credentials from environment variables
+const PAYPAL_CLIENT_ID = process.env.PAYPAL_CLIENT_ID;
+const PAYPAL_CLIENT_SECRET = process.env.PAYPAL_CLIENT_SECRET;
+
+// Validate environment variables
+if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) {
+  console.error('Error: PayPal API credentials are required.');
+  console.error('Please set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET in your .env file.');
+  process.exit(1);
+}
+
+const SERVER_DIR = process.env.SERVER_DIR || path.join(__dirname, 'paypal-payment-server');
 const REQUEST_TIMEOUT = 5000; // ms
 
 // Helper to format time
