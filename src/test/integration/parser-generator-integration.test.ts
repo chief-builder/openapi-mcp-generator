@@ -8,7 +8,7 @@ import * as path from 'path';
 
 describe('Parser-Generator Integration', () => {
   const outputDir = path.resolve(__dirname, '../../../test-output-pg');
-  const mockSpecPath = path.resolve(__dirname, '../../../test-resources/mock-spec.json');
+  const mockSpecPath = path.resolve(__dirname, '../../../specs/test/mock-spec.json');
   
   beforeAll(async () => {
     // Ensure test output directory exists

@@ -8,7 +8,7 @@ import { StripeProvider } from '../../providers/stripe/provider';
 
 // Test configuration
 const config = {
-  testSpecPath: path.resolve(__dirname, '../../../test-resources/simple-spec.json'),
+  testSpecPath: path.resolve(__dirname, '../../../specs/test/simple-spec.json'),
   outputDir: path.resolve(__dirname, '../../../test-output-simple')
 };
 

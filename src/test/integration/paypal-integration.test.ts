@@ -8,7 +8,7 @@ import { PayPalProvider } from '../../providers/paypal/provider';
 
 // Test configuration
 const config = {
-  testSpecPath: path.resolve(__dirname, '../../../test-resources/paypal-spec.json'),
+  testSpecPath: path.resolve(__dirname, '../../../specs/paypal/openapi/spec3.json'),
   outputDir: path.resolve(__dirname, '../../../test-output-paypal'),
   serverPort: 9092
 };
