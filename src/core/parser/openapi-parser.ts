@@ -20,7 +20,7 @@ export class OpenAPIParser {
 
   /**
    * Create a new OpenAPI parser
-   * 
+   *
    * @param provider Provider implementation for API-specific logic
    * @param options Parser options
    */
@@ -266,14 +266,19 @@ export class OpenAPIParser {
     operationParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined,
     pathParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined
   ): IParsedParameter[] {
-    // Combine path-level and operation-level parameters
-    const combinedParams = [
-      ...(pathParameters || []), 
-      ...(operationParameters || [])
-    ];
+    // Combine path-level and operation-level parameters.
+    // Operation-level parameters override path-level parameters with the same
+    // location and name, matching the OpenAPI parameter merge rules.
+    const combinedParams = new Map<string, OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject>();
+    for (const param of pathParameters || []) {
+      combinedParams.set(this.getParameterKey(param), param);
+    }
+    for (const param of operationParameters || []) {
+      combinedParams.set(this.getParameterKey(param), param);
+    }
     
     // Parse each parameter
-    return combinedParams.map(param => {
+    return Array.from(combinedParams.values()).map(param => {
       // Handle reference objects
       if ('$ref' in param) {
         // In a real implementation, we would resolve the reference
@@ -301,6 +306,19 @@ export class OpenAPIParser {
       
       return parsedParam;
     });
+  }
+
+  /**
+   * Get a stable parameter key for OpenAPI override matching
+   * @param param Parameter or reference object
+   * @returns Parameter key
+   */
+  private getParameterKey(param: OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject): string {
+    if ('$ref' in param) {
+      return `$ref:${param.$ref}`;
+    }
+
+    return `${param.in}:${param.name}`;
   }
   
   /**
