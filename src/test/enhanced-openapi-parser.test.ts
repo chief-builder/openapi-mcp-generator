@@ -326,6 +326,47 @@ describe('OpenAPIParser', () => {
       expect(getEndpoint?.parameters[0].name).toBe('customerId');
       expect(getEndpoint?.parameters[0].required).toBe(true);
     });
+
+    test('operation parameters override path-level parameters with the same location and name', () => {
+      const provider = createMockProvider({
+        parseOpenAPISpec: jest.fn(spec => {
+          const parser = new OpenAPIParser({} as IProvider);
+          return (parser as any).defaultParse(spec);
+        })
+      });
+
+      const parser = new OpenAPIParser(provider);
+      const spec = createSampleSpec();
+      (spec.paths as any)['/customers/{customerId}'].parameters = [
+        {
+          name: 'customerId',
+          in: 'path',
+          required: true,
+          schema: { type: 'integer' },
+          description: 'Shared path parameter'
+        }
+      ];
+      (spec.paths as any)['/customers/{customerId}'].get.parameters = [
+        {
+          name: 'customerId',
+          in: 'path',
+          required: true,
+          schema: { type: 'string' },
+          description: 'Operation-specific path parameter'
+        }
+      ];
+
+      const parsedSpec = parser.parse(spec);
+
+      const getEndpoint = parsedSpec.endpoints.find(e => e.operationId === 'getCustomer');
+      expect(getEndpoint?.parameters).toHaveLength(1);
+      expect(getEndpoint?.parameters[0]).toMatchObject({
+        name: 'customerId',
+        in: 'path',
+        description: 'Operation-specific path parameter',
+        schema: { type: 'string' }
+      });
+    });
     
     test('parses security schemes correctly', () => {
       const provider = createMockProvider({
