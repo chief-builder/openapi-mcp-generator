@@ -1,0 +1,189 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Xquik REST API Sample",
+    "version": "1.0.0",
+    "description": "Sample Xquik API definition for testing API-key-authenticated OpenAPI parsing."
+  },
+  "externalDocs": {
+    "description": "Xquik REST API documentation",
+    "url": "https://docs.xquik.com/api-reference/overview"
+  },
+  "servers": [
+    {
+      "url": "https://xquik.com/api/v1",
+      "description": "Xquik REST API v1"
+    }
+  ],
+  "security": [
+    {
+      "XquikApiKey": []
+    }
+  ],
+  "paths": {
+    "/account": {
+      "get": {
+        "operationId": "getAccount",
+        "summary": "Get account",
+        "description": "Return account usage, credit, and subscription details.",
+        "tags": ["Account"],
+        "responses": {
+          "200": {
+            "description": "Account details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Account"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key"
+          }
+        }
+      }
+    },
+    "/monitors": {
+      "post": {
+        "operationId": "createMonitor",
+        "summary": "Create monitor",
+        "description": "Create an account or keyword monitor for X data.",
+        "tags": ["Monitors"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMonitorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Monitor created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Monitor"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key"
+          }
+        }
+      }
+    },
+    "/webhooks": {
+      "post": {
+        "operationId": "createWebhook",
+        "summary": "Create webhook",
+        "description": "Register a signed webhook endpoint for monitor and event delivery.",
+        "tags": ["Webhooks"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Webhook created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Webhook"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "XquikApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "Account": {
+        "type": "object",
+        "required": ["id", "credits"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "credits": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "CreateMonitorRequest": {
+        "type": "object",
+        "required": ["type", "target"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["account", "keyword"]
+          },
+          "target": {
+            "type": "string"
+          }
+        }
+      },
+      "Monitor": {
+        "type": "object",
+        "required": ["id", "type", "target"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateWebhookRequest": {
+        "type": "object",
+        "required": ["url"],
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      },
+      "Webhook": {
+        "type": "object",
+        "required": ["id", "url"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    }
+  }
+}
