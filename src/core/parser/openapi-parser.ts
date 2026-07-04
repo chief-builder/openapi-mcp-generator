@@ -145,6 +145,7 @@ export class OpenAPIParser {
    */
   private parseEndpoints(spec: OpenAPIV3.Document): IParsedEndpoint[] {
     const endpoints: IParsedEndpoint[] = [];
+    const rootSecurity = Array.isArray(spec.security) ? spec.security : undefined;
     
     // Iterate through all paths and methods
     Object.entries(spec.paths).forEach(([path, pathItem]) => {
@@ -186,9 +187,11 @@ export class OpenAPIParser {
           endpoint.requestBody = this.parseRequestBody(operationObj.requestBody);
         }
         
-        // Add security requirements if present
+        // Add operation security, falling back to root-level requirements
         if (operationObj.security) {
           endpoint.security = operationObj.security;
+        } else if (rootSecurity) {
+          endpoint.security = rootSecurity;
         }
         
         endpoints.push(endpoint);
@@ -239,10 +242,14 @@ export class OpenAPIParser {
    * @param obj Object to extract extensions from
    * @returns Object with extensions
    */
-  private extractExtensions(obj: any): { [key: string]: any } {
+  public extractExtensions(obj: any): { [key: string]: any } {
+    return OpenAPIParser.extractExtensions(obj, Boolean(this.options.customExtensions));
+  }
+
+  public static extractExtensions(obj: any, customExtensions = false): { [key: string]: any } {
     const extensions: { [key: string]: any } = {};
     
-    if (!this.options.customExtensions) {
+    if (!customExtensions) {
       return extensions;
     }
     
@@ -262,7 +269,14 @@ export class OpenAPIParser {
    * @param pathParameters Path parameters
    * @returns Parsed parameters
    */
-  private parseParameters(
+  public parseParameters(
+    operationParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined,
+    pathParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined
+  ): IParsedParameter[] {
+    return OpenAPIParser.parseParameters(operationParameters, pathParameters);
+  }
+
+  public static parseParameters(
     operationParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined,
     pathParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined
   ): IParsedParameter[] {
@@ -309,7 +323,13 @@ export class OpenAPIParser {
    * @param requestBody Request body
    * @returns Parsed request body
    */
-  private parseRequestBody(
+  public parseRequestBody(
+    requestBody: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject
+  ): IParsedRequestBody {
+    return OpenAPIParser.parseRequestBody(requestBody);
+  }
+
+  public static parseRequestBody(
     requestBody: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject
   ): IParsedRequestBody {
     // Handle reference objects
@@ -335,7 +355,11 @@ export class OpenAPIParser {
    * @param responses Responses
    * @returns Parsed responses
    */
-  private parseResponses(responses: OpenAPIV3.ResponsesObject): { [statusCode: string]: IParsedResponse } {
+  public parseResponses(responses: OpenAPIV3.ResponsesObject): { [statusCode: string]: IParsedResponse } {
+    return OpenAPIParser.parseResponses(responses);
+  }
+
+  public static parseResponses(responses: OpenAPIV3.ResponsesObject): { [statusCode: string]: IParsedResponse } {
     const parsedResponses: { [statusCode: string]: IParsedResponse } = {};
     
     Object.entries(responses).forEach(([statusCode, response]) => {
@@ -379,7 +403,11 @@ export class OpenAPIParser {
    * @param method HTTP method
    * @returns Whether the method is valid
    */
-  private isHttpMethod(method: string): boolean {
+  public isHttpMethod(method: string): boolean {
+    return OpenAPIParser.isHttpMethod(method);
+  }
+
+  public static isHttpMethod(method: string): boolean {
     return ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'].includes(method.toLowerCase());
   }
   

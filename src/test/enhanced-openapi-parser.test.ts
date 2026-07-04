@@ -241,6 +241,65 @@ const createSampleSpec = () => ({
   }
 });
 
+const createXquikSearchSpec = () => ({
+  openapi: '3.1.0',
+  info: {
+    title: 'Xquik API',
+    version: '1.0.0',
+    description: 'API for testing Xquik search parsing'
+  },
+  servers: [
+    { url: 'https://xquik.com' }
+  ],
+  security: [
+    { apiKey: [] }
+  ],
+  paths: {
+    '/api/v1/x/tweets/search': {
+      get: {
+        operationId: 'searchTweets',
+        summary: 'Search tweets',
+        parameters: [
+          {
+            name: 'q',
+            in: 'query',
+            required: true,
+            schema: { type: 'string' }
+          },
+          {
+            name: 'limit',
+            in: 'query',
+            required: false,
+            schema: { type: 'integer' }
+          },
+          {
+            name: 'cursor',
+            in: 'query',
+            required: false,
+            schema: { type: 'string' }
+          }
+        ],
+        responses: {
+          '200': {
+            description: 'Search results'
+          }
+        },
+        tags: ['X']
+      }
+    }
+  },
+  components: {
+    securitySchemes: {
+      apiKey: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'x-api-key'
+      }
+    },
+    schemas: {}
+  }
+});
+
 describe('OpenAPIParser', () => {
   describe('Basic functionality', () => {
     test('creates an instance with the provided provider', () => {
@@ -345,6 +404,33 @@ describe('OpenAPIParser', () => {
       expect(parsedSpec.securitySchemes.apiKey.type).toBe('apiKey');
       expect(parsedSpec.securitySchemes.apiKey.in).toBe('header');
       expect(parsedSpec.securitySchemes.apiKey.name).toBe('Authorization');
+    });
+
+    test('parses OpenAPI 3.1 global api key security for Xquik search', () => {
+      const provider = createMockProvider({
+        parseOpenAPISpec: jest.fn(spec => {
+          const parser = new OpenAPIParser({} as IProvider);
+          return (parser as any).defaultParse(spec);
+        })
+      });
+
+      const parser = new OpenAPIParser(provider);
+      const parsedSpec = parser.parse(createXquikSearchSpec());
+      const endpoint = parsedSpec.endpoints.find(e => e.operationId === 'searchTweets');
+
+      expect(parsedSpec.title).toBe('Xquik API');
+      expect(parsedSpec.servers[0].url).toBe('https://xquik.com');
+      expect(parsedSpec.securitySchemes.apiKey.type).toBe('apiKey');
+      expect(parsedSpec.securitySchemes.apiKey.in).toBe('header');
+      expect(parsedSpec.securitySchemes.apiKey.name).toBe('x-api-key');
+      expect(endpoint).toBeDefined();
+      expect(endpoint?.path).toBe('/api/v1/x/tweets/search');
+      expect(endpoint?.security).toEqual([{ apiKey: [] }]);
+      expect(endpoint?.parameters.map(parameter => parameter.name)).toEqual([
+        'q',
+        'limit',
+        'cursor'
+      ]);
     });
   });
   
