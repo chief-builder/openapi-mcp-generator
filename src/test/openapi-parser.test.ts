@@ -94,6 +94,28 @@ describe('OpenAPIParser', () => {
     // Verify that the provider's parseOpenAPISpec method was called
     expect(mockProvider.parseOpenAPISpec).toHaveBeenCalled();
   });
+
+  test('parses the Xquik API key sample spec', async () => {
+    const sampleProvider: IProvider = {
+      ...mockProvider,
+      parseOpenAPISpec: jest.fn((spec) => {
+        const parser = new OpenAPIParser({} as IProvider);
+        return (parser as any).defaultParse(spec);
+      })
+    };
+    const parser = new OpenAPIParser(sampleProvider);
+    const sampleSpecPath = path.join(__dirname, '../../specs/xquik/openapi.json');
+    const parsedSpec = await parser.parseFromFile(sampleSpecPath);
+
+    expect(parsedSpec.title).toBe('Xquik REST API Sample');
+    expect(parsedSpec.servers[0].url).toBe('https://xquik.com/api/v1');
+    expect(parsedSpec.securitySchemes).toHaveProperty('XquikApiKey');
+    expect(parsedSpec.endpoints.map(endpoint => endpoint.operationId)).toEqual([
+      'getAccount',
+      'createMonitor',
+      'createWebhook'
+    ]);
+  });
   
   test('throws an error when the spec file does not exist', async () => {
     const parser = new OpenAPIParser(mockProvider);

@@ -63,10 +63,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/openapi-mcp-generator.git"
+    "url": "https://github.com/chief-builder/openapi-mcp-generator.git"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/openapi-mcp-generator/issues"
+    "url": "https://github.com/chief-builder/openapi-mcp-generator/issues"
   },
-  "homepage": "https://github.com/yourusername/openapi-mcp-generator#readme"
+  "homepage": "https://github.com/chief-builder/openapi-mcp-generator#readme"
 }

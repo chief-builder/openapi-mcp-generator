@@ -185,6 +185,14 @@ The system currently supports the following providers:
 | Generic  | Generic OpenAPI provider           | Planned     | -           |
 | Custom   | Support for custom implementations | Supported   | -           |
 
+### Sample OpenAPI Specs
+
+The `specs/` directory includes small API definitions that exercise parser behavior:
+
+- `specs/xquik/openapi.json` demonstrates API-key authentication through the
+  `x-api-key` header, shared security schemes, request bodies, and generated
+  monitor/webhook operations for an X data API.
+
 ## Development
 
 ### Project Structure
