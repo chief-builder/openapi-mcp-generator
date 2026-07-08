@@ -250,12 +250,10 @@ export class OpenAPIParser {
   public static extractExtensions(obj: any, enableCustomExtensions: boolean = false): { [key: string]: any } {
     const extensions: { [key: string]: any } = {};
 
-    if (!enableCustomExtensions) {
-      return extensions;
-    }
-
     Object.entries(obj).forEach(([key, value]) => {
-      if (key.startsWith('x-')) {
+      // MCP authorization extensions are load-bearing (per-tool scope/group), so
+      // always capture them; other x- extensions only when explicitly enabled.
+      if (key.startsWith('x-mcp-') || (enableCustomExtensions && key.startsWith('x-'))) {
         extensions[key] = value;
       }
     });
