@@ -4,11 +4,18 @@
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 
-A powerful tool for generating [Model Context Protocol (MCP)](https://github.com/anthropics/anthropic-cookbook/tree/main/mcp) servers from OpenAPI specifications. This tool enables seamless integration between OpenAPI-based services and AI assistants supporting the MCP protocol.
+Generate [Model Context Protocol (MCP)](https://modelcontextprotocol.io) servers from OpenAPI specifications. Generated servers are built on the **official `@modelcontextprotocol/sdk`**, speak MCP over **stateless Streamable HTTP** (the 2026-07-28 architectural model), and are **OAuth 2.1 resource servers** out of the box.
 
 ## Overview
 
-The OpenAPI MCP Generator transforms standard OpenAPI specifications into fully functional MCP servers that expose API operations as MCP tools. This allows AI assistants to interact with APIs in a standardized way, making it easier to build AI-powered applications that leverage existing API ecosystems.
+The generator turns an OpenAPI spec into a real MCP server that exposes each operation as an MCP tool. The emitted server:
+
+- uses the SDK's `McpServer` over `StreamableHTTPServerTransport` in **stateless mode** — real `initialize` / `tools/list` / `tools/call`, no bespoke JSON-RPC, no sessions;
+- is an **OAuth 2.1 resource server** (MCP Authorization spec): publishes Protected Resource Metadata (RFC 9728), challenges with `WWW-Authenticate`, and validates that every token's `aud` names this server (RFC 8707 audience binding);
+- **never forwards the caller's token upstream** — the upstream API credential is a separate secret (no confused-deputy);
+- validates tool inputs with **zod**, binds **loopback** by default, and checks **Origin / Host** (DNS-rebinding).
+
+> The protocol wire version is whatever the installed SDK negotiates (currently `2025-11-25`, moving to `2026-07-28` as the SDK lands it). Bump the SDK to move the wire version — no regeneration needed.
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
@@ -28,31 +35,40 @@ The OpenAPI MCP Generator transforms standard OpenAPI specifications into fully 
 
 ## Features
 
-- **Automated Code Generation**: Generates fully functional TypeScript MCP server implementations
-- **Provider-Based Design**: Extensible provider system supporting different API styles and authentication methods
-- **Standardized Naming Conventions**: Consistent naming across generated code
-- **Customizable Templates**: Easily modify templates to suit specific needs
-- **Authentication Support**: Automatic generation of auth providers based on OpenAPI security schemes
-- **Tool Mapping**: Maps OpenAPI operations to MCP tools with appropriate schemas
-- **Stripe Integration**: Built-in support for the Stripe API (557 tools from 563 operations)
-- **PayPal Integration**: Built-in support for the PayPal API with OAuth 2.0 authentication
-- **Enhanced Security**: Transport security features including CORS protection, rate limiting, and request validation
-- **Multiple Transport Options**: Support for HTTP, stdio (coming soon), and SSE (coming soon) transports
-- **Dynamic Execution**: Automatic mapping of REST operations to MCP tools for seamless integration
+- **Official MCP SDK**: generated servers depend on `@modelcontextprotocol/sdk` and speak the real protocol — no hand-rolled JSON-RPC.
+- **Stateless Streamable HTTP**: a fresh server + transport per request (`sessionIdGenerator: undefined`); runs behind a plain load balancer.
+- **OAuth 2.1 resource server**: Protected Resource Metadata (RFC 9728), `WWW-Authenticate` challenges, JWT signature/issuer/expiry validation via `jose`, and RFC 8707 audience binding.
+- **No token passthrough**: upstream credential is a separate env secret by default; `passthrough` is an explicit, warned opt-in.
+- **zod input validation**: each tool's arguments are validated against a schema derived from the OpenAPI operation.
+- **Loopback + DNS-rebinding defense**: binds `127.0.0.1` by default and validates `Origin` / `Host`.
+- **Provider-based mapping**: providers (Stripe, PayPal) contribute tool names/annotations; the secure server is generated centrally — every provider gets the identical hardened server.
 
-## Key Metrics
+## Generate a server
 
-### Stripe MCP Server
-- **Tools Coverage**: 557 tools covering the entire Stripe API
-- **API Integration**: Complete REST API coverage with dynamic execution
-- **Resource Management**: CRUD operations on all Stripe resources
-- **Authentication**: API key authentication with secure token handling
+```sh
+npm run generate -- \
+  --spec ./openapi.json \
+  --output ./my-mcp-server \
+  --provider stripe \
+  --name my-mcp \
+  --resource-uri https://mcp.example.com/mcp \
+  --auth-server https://auth.example.com/realms/plane \
+  --upstream-auth env-credential
+```
 
-### PayPal MCP Server
-- **Tools Coverage**: 8 tools covering the complete PayPal Orders API
-- **Authentication**: OAuth 2.0 flow with automatic token management
-- **Order Management**: Complete order creation and processing workflow
-- **API Integration**: Direct integration with PayPal's API endpoints
+Then in the generated server: `npm install && npm run build && npm start`.
+Configure it at runtime via env: `MCP_RESOURCE_URI`, `MCP_AUTHORIZATION_SERVERS`,
+`MCP_JWKS_URI`, `MCP_REQUIRED_SCOPES`, `UPSTREAM_API_KEY`, `PORT`, `HOST`, `ALLOWED_ORIGINS`.
+
+### Key flags
+
+| Flag | Meaning |
+|---|---|
+| `--resource-uri` | Canonical server URI = the required token audience (RFC 8707) |
+| `--auth-server` | Authorization server issuer URL(s) advertised in Protected Resource Metadata |
+| `--jwks-uri` | JWKS for token signature validation (defaults from `--auth-server`) |
+| `--required-scope` | Scope(s) the server enforces (403 on shortfall) |
+| `--upstream-auth` | `none` \| `env-credential` (default) \| `passthrough` (discouraged) |
 
 ## Installation
 

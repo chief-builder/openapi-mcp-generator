@@ -49,3 +49,10 @@ test-output-paypal/
 test-output-paypal-orders/
 test-output-simple/
 test-output-server/
+
+# pre-existing local scratch / generated output (not source)
+paypal-payment-server-new/
+paypal_openapi_spec.json
+*output.txt
+mcp-tester.html
+paypal-direct-test.js
