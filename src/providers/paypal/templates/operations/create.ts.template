@@ -1,7 +1,0 @@
-// Format the path based on resource
-      const path = '${version}/${resource}';
-      
-      // Execute the request
-      const ${resource} = await paypal.post(path, params);
-      
-      return ${resource};

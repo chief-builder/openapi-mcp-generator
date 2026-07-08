@@ -6,18 +6,36 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { IParsedSpec } from '../models/parser-types';
+import { IParsedSpec, IParsedEndpoint } from '../models/parser-types';
 import { IProvider, IProviderConfig } from '../models/provider';
-import { 
-  IGeneratorConfig, 
-  IGeneratorResult, 
-  IMCPGenerator
+import {
+  IGeneratorConfig,
+  IGeneratorResult,
+  IMCPGenerator,
+  IServerAuthConfig
 } from '../models/generator-types';
-import { 
-  formatServerClassName, 
-  kebabToPascalCase 
+import {
+  formatServerClassName,
+  kebabToPascalCase
 } from '../models/naming-conventions';
 import { TemplateLoader } from '../utils/template-loader';
+
+/**
+ * A self-contained description of one MCP tool: its schema plus how to route
+ * validated arguments back onto the upstream HTTP operation.
+ */
+interface IToolDescriptor {
+  name: string;
+  title?: string;
+  description?: string;
+  inputSchema: any;
+  annotations?: Record<string, unknown>;
+  method: string;
+  path: string;
+  pathParams: string[];
+  queryParams: string[];
+  bodyParams: string[];
+}
 
 /**
  * Generator for creating MCP servers from OpenAPI specifications
@@ -39,89 +57,40 @@ export class MCPGenerator implements IMCPGenerator {
     try {
       console.log(`Generating MCP server for ${spec.title} in ${config.outputDir}...`);
       const generatedFiles: string[] = [];
-      
-      // Create output directory if it doesn't exist
+
+      // Create output + src directories
       await fs.ensureDir(config.outputDir);
-      
-      // Create src directory
       const srcDir = path.join(config.outputDir, 'src');
       await fs.ensureDir(srcDir);
-      
-      // Create provider config
+
       const providerConfig: IProviderConfig = {
         name: config.serverName,
         version: config.serverVersion,
         description: config.serverDescription,
         ...config.providerConfig
       };
-      
-      // Generate package.json
+
+      // package.json, tsconfig.json, README.md
       await this.generatePackageJson(config);
       generatedFiles.push('package.json');
-      
-      // Generate tsconfig.json
       await this.generateTsConfig(config);
       generatedFiles.push('tsconfig.json');
-      
-      // Generate README.md
       await this.generateReadme(config, spec, provider);
       generatedFiles.push('README.md');
-      
-      // Generate MCP types
-      await this.generateMCPTypes(path.join(config.outputDir, 'src'));
-      generatedFiles.push('src/mcp-types.ts');
-      
-      // Generate auth provider
-      const authProviderResult = provider.createAuthProvider({
-        type: 'api-key',
-        requireAuth: config.authConfig?.requireAuth ?? true,
-        defaultApiKey: config.authConfig?.defaultApiKey,
-        ...config.authConfig
-      });
-      
-      await fs.writeFile(
-        path.join(srcDir, `${authProviderResult.name}.ts`),
-        authProviderResult.code
-      );
-      generatedFiles.push(`src/${authProviderResult.name}.ts`);
-      
-      // Generate server implementation
-      const serverImplementation = provider.generateServerImplementation(spec, providerConfig);
-      await fs.writeFile(
-        path.join(srcDir, `${providerConfig.name || 'api'}-server.ts`),
-        serverImplementation
-      );
-      generatedFiles.push(`src/${providerConfig.name || 'api'}-server.ts`);
-      
-      
-      // Generate index file
-      await this.generateIndexFile(config, providerConfig, authProviderResult.name);
+
+      // OAuth 2.1 resource-server module (verbatim core template)
+      await this.emitCoreFile('oauth-resource-server.ts.template', path.join(srcDir, 'oauth-resource-server.ts'));
+      generatedFiles.push('src/oauth-resource-server.ts');
+
+      // Shared SDK-based, stateless MCP server driven by the tool descriptors
+      const tools = this.buildToolDescriptors(spec, provider);
+      await this.emitSharedServer(config, spec, tools, path.join(srcDir, 'mcp-server.ts'));
+      generatedFiles.push('src/mcp-server.ts');
+
+      // Entry point
+      await this.emitIndex(config, path.join(srcDir, 'index.ts'));
       generatedFiles.push('src/index.ts');
-      
-      // Generate CLI file
-      await this.generateCliFile(config, providerConfig);
-      generatedFiles.push('src/cli.ts');
-      
-      // Generate additional files if provider has them
-      if (provider.generateAdditionalFiles) {
-        const additionalFiles = provider.generateAdditionalFiles(spec, providerConfig);
-        
-        for (const [filename, content] of additionalFiles.entries()) {
-          // Special handling for package.json.additions
-          if (filename === 'package.json.additions') {
-            await this.applyPackageAdditions(config.outputDir, content);
-            // Don't add to generatedFiles since we're not creating a new file
-            continue;
-          }
-          
-          // Normal file creation
-          const filePath = path.join(config.outputDir, filename);
-          await fs.ensureDir(path.dirname(filePath));
-          await fs.writeFile(filePath, content);
-          generatedFiles.push(filename);
-        }
-      }
-      
+
       return {
         outputDir: config.outputDir,
         files: generatedFiles,
@@ -138,8 +107,169 @@ export class MCPGenerator implements IMCPGenerator {
   }
   
   /**
+   * Copy a core template to a destination file verbatim (no variable rendering).
+   */
+  private async emitCoreFile(templateName: string, destPath: string): Promise<void> {
+    const content = await TemplateLoader.loadTemplate(TemplateLoader.getCoreTemplatePath(templateName));
+    await fs.writeFile(destPath, content);
+  }
+
+  /**
+   * Resolve the resource-server config, filling defaults.
+   */
+  private resolveAuthConfig(config: IGeneratorConfig): Required<Omit<IServerAuthConfig, 'issuer'>> & { issuer: string } {
+    const auth: IServerAuthConfig = config.serverAuthConfig ?? {
+      resourceUri: `urn:mcp:${config.serverName}`,
+      authorizationServers: [],
+    };
+    const authServers = auth.authorizationServers ?? [];
+    return {
+      resourceUri: auth.resourceUri,
+      authorizationServers: authServers,
+      jwksUri: auth.jwksUri ?? (authServers[0] ? `${authServers[0]}/protocol/openid-connect/certs` : ''),
+      issuer: auth.issuer ?? '',
+      requiredScopes: auth.requiredScopes ?? [],
+      upstreamAuth: auth.upstreamAuth ?? 'env-credential',
+      upstreamBaseUrl: auth.upstreamBaseUrl ?? '',
+    };
+  }
+
+  /**
+   * Build MCP tool descriptors from the parsed endpoints. Tool names/titles/
+   * annotations come from the provider (nice naming); the input schema and
+   * argument routing (path/query/body) are derived from the endpoint itself so
+   * schema keys and routing always agree.
+   */
+  private buildToolDescriptors(spec: IParsedSpec, provider: IProvider): IToolDescriptor[] {
+    const providerTools = provider.mapOperationsToTools(spec.endpoints);
+    const byOp = new Map<string, any>();
+    for (const t of providerTools) {
+      const opId = (t.metadata && t.metadata.operationId) || t.id;
+      byOp.set(opId, t);
+    }
+
+    return spec.endpoints.map((endpoint) => {
+      const info = byOp.get(endpoint.operationId);
+      const pathParams = endpoint.parameters.filter((p) => p.in === 'path').map((p) => p.name);
+      const queryParams = endpoint.parameters.filter((p) => p.in === 'query').map((p) => p.name);
+      const { bodyParams, inputSchema } = this.buildInputSchema(endpoint);
+
+      return {
+        name: info?.name ?? this.defaultToolName(endpoint.operationId),
+        title: info?.annotations?.title,
+        description: info?.description || endpoint.description || endpoint.summary || undefined,
+        inputSchema,
+        annotations: info?.annotations,
+        method: endpoint.method.toUpperCase(),
+        path: endpoint.path,
+        pathParams,
+        queryParams,
+        bodyParams,
+      };
+    });
+  }
+
+  /**
+   * Build a JSON-schema inputSchema from an endpoint's path/query params and
+   * request body, returning the body property names for argument routing.
+   */
+  private buildInputSchema(endpoint: IParsedEndpoint): { bodyParams: string[]; inputSchema: any } {
+    const properties: Record<string, any> = {};
+    const required: string[] = [];
+    const bodyParams: string[] = [];
+
+    for (const param of endpoint.parameters) {
+      if (param.in !== 'path' && param.in !== 'query') continue;
+      properties[param.name] = {
+        ...(param.schema || { type: 'string' }),
+        description: param.description || `${param.name} parameter`,
+      };
+      if (param.required) required.push(param.name);
+    }
+
+    const body = endpoint.requestBody?.content;
+    if (body) {
+      const contentType = body['application/json'] ? 'application/json' : Object.keys(body)[0];
+      const bodySchema = contentType ? body[contentType]?.schema : undefined;
+      if (bodySchema?.properties) {
+        for (const [name, propSchema] of Object.entries(bodySchema.properties as Record<string, any>)) {
+          properties[name] = {
+            ...(propSchema as any),
+            description: (propSchema as any).description || `${name} parameter`,
+          };
+          bodyParams.push(name);
+        }
+        if (Array.isArray(bodySchema.required)) required.push(...bodySchema.required);
+      }
+    }
+
+    return {
+      bodyParams,
+      inputSchema: {
+        type: 'object',
+        properties,
+        ...(required.length ? { required: Array.from(new Set(required)) } : {}),
+      },
+    };
+  }
+
+  private defaultToolName(operationId: string): string {
+    if (!operationId) return 'unknownTool';
+    return operationId
+      .replace(/[^a-zA-Z0-9]+([a-zA-Z0-9])/g, (_, c) => c.toUpperCase())
+      .replace(/^([A-Z])/, (_, c) => c.toLowerCase());
+  }
+
+  /**
+   * Render and write the shared stateless SDK server. Uses %%TOKEN%% markers so
+   * runtime `${...}` template literals in the emitted TypeScript survive.
+   */
+  private async emitSharedServer(
+    config: IGeneratorConfig,
+    spec: IParsedSpec,
+    tools: IToolDescriptor[],
+    destPath: string
+  ): Promise<void> {
+    const auth = this.resolveAuthConfig(config);
+    const baseUrl = auth.upstreamBaseUrl || spec.servers?.[0]?.url || '';
+    const template = await TemplateLoader.loadTemplate(TemplateLoader.getCoreTemplatePath('mcp-server.ts.template'));
+
+    const replacements: Record<string, string> = {
+      SERVER_NAME: config.serverName,
+      SERVER_VERSION: config.serverVersion,
+      HTTP_PORT: String(config.httpPort || 3000),
+      BASE_URL: baseUrl,
+      UPSTREAM_AUTH_MODE: auth.upstreamAuth,
+      RESOURCE_URI: auth.resourceUri,
+      AUTH_SERVERS: auth.authorizationServers.join(','),
+      JWKS_URI: auth.jwksUri,
+      ISSUER: auth.issuer,
+      REQUIRED_SCOPES: auth.requiredScopes.join(','),
+      TOOLS_JSON: JSON.stringify(tools, null, 2),
+    };
+
+    let rendered = template;
+    for (const [token, value] of Object.entries(replacements)) {
+      rendered = rendered.split(`%%${token}%%`).join(value);
+    }
+    await fs.writeFile(destPath, rendered);
+  }
+
+  /**
+   * Render and write the entry point.
+   */
+  private async emitIndex(config: IGeneratorConfig, destPath: string): Promise<void> {
+    const templatePath = TemplateLoader.getCoreTemplatePath('index.ts.template');
+    const content = await TemplateLoader.loadAndRenderTemplate(templatePath, {
+      serverName: config.serverName,
+      serverDescription: config.serverDescription || 'MCP server generated from an OpenAPI specification',
+    });
+    await fs.writeFile(destPath, content);
+  }
+
+  /**
    * Generate package.json file
-   * 
+   *
    * @param config Generator configuration
    */
   private async generatePackageJson(config: IGeneratorConfig): Promise<void> {

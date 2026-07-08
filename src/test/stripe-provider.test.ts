@@ -15,30 +15,6 @@ describe('StripeProvider', () => {
     expect(provider.description).toBeDefined();
   });
   
-  describe('createAuthProvider', () => {
-    test('creates auth provider with default config', () => {
-      const result = provider.createAuthProvider({
-        type: 'api-key'
-      });
-      
-      expect(result.code).toBeDefined();
-      expect(result.name).toBe('stripe-auth-provider');
-      expect(result.type).toBe('stripe-api-key');
-    });
-    
-    test('creates auth provider with custom config', () => {
-      const result = provider.createAuthProvider({
-        type: 'api-key',
-        requireAuth: false,
-        defaultApiKey: 'test_key'
-      });
-      
-      expect(result.code).toBeDefined();
-      expect(result.name).toBe('stripe-auth-provider');
-
-    });
-  });
-  
   describe('mapOperationsToTools', () => {
     test('maps operations to tools', () => {
       const operations: IParsedEndpoint[] = [

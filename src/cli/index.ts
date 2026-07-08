@@ -6,23 +6,10 @@ import { Command } from 'commander';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { OpenAPIParser, MCPGenerator, ProviderRegistry } from '../core';
+import { version as pkgVersion } from '../../package.json';
 
-// Import providers to ensure they're registered
-console.log('CLI initialization starting...');
-try {
-  // Import providers using require to ensure they're loaded
-  require('../providers');
-
-  // Check provider registry
-  console.log('Checking available providers...');
-  const providers = ProviderRegistry.getAllProviders();
-  console.log(`Found ${providers.length} providers:`);
-  providers.forEach(provider => {
-    console.log(`- ${provider.name} v${provider.version}`);
-  });
-} catch (error) {
-  console.error('Error loading providers:', error);
-}
+// Register providers (side-effect import).
+require('../providers');
 
 // Create CLI program
 const program = new Command();
@@ -30,10 +17,8 @@ const program = new Command();
 program
   .name('openapi-mcp-generator')
   .description('Generate MCP servers from OpenAPI specifications')
-  .version('0.1.0');
+  .version(pkgVersion);
 
-console.log('Setting up CLI commands...');
-  
 program
   .command('generate')
   .description('Generate an MCP server from an OpenAPI specification')
@@ -44,6 +29,14 @@ program
   .option('-v, --version <version>', 'Server version', '1.0.0')
   .option('-d, --description <description>', 'Server description')
   .option('-c, --config <path>', 'Configuration file')
+  .option('--resource-uri <uri>', 'Canonical MCP server URI = required token audience (RFC 8707)')
+  .option('--auth-server <url...>', 'Authorization server issuer URL(s) for Protected Resource Metadata')
+  .option('--jwks-uri <url>', 'JWKS URL for token signature validation')
+  .option('--issuer <url>', 'Expected token issuer (defaults to the first --auth-server)')
+  .option('--required-scope <scope...>', 'Scope(s) the server requires (enforced -> 403)')
+  .option('--upstream-auth <mode>', 'Upstream auth: none | env-credential | passthrough', 'env-credential')
+  .option('--upstream-base-url <url>', 'Upstream API base URL (defaults to the spec server URL)')
+  .option('--allow-token-passthrough', 'Shortcut for --upstream-auth passthrough (discouraged)')
   .action(async (options) => {
     try {
       console.log('Generate command triggered');
@@ -99,18 +92,51 @@ program
       // Determine server name
       const serverName = options.name || config.serverName || parsedSpec.title.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-mcp-server';
       
+      // Resolve resource-server (OAuth) configuration from flags/config file.
+      const authServers: string[] =
+        options.authServer || config.serverAuthConfig?.authorizationServers || [];
+      const upstreamAuth = options.allowTokenPassthrough
+        ? 'passthrough'
+        : (options.upstreamAuth || config.serverAuthConfig?.upstreamAuth || 'env-credential');
+      const serverAuthConfig = {
+        resourceUri:
+          options.resourceUri ||
+          config.serverAuthConfig?.resourceUri ||
+          `urn:mcp:${serverName}`,
+        authorizationServers: authServers,
+        jwksUri: options.jwksUri || config.serverAuthConfig?.jwksUri,
+        issuer: options.issuer || config.serverAuthConfig?.issuer,
+        requiredScopes: options.requiredScope || config.serverAuthConfig?.requiredScopes || [],
+        upstreamAuth,
+        upstreamBaseUrl: options.upstreamBaseUrl || config.serverAuthConfig?.upstreamBaseUrl,
+      };
+
+      if (upstreamAuth === 'passthrough') {
+        console.warn(
+          'WARNING: --upstream-auth passthrough forwards the caller token to the upstream API. ' +
+          'This is a confused-deputy risk the MCP spec forbids for third-party APIs. Prefer env-credential.',
+        );
+      }
+      if (!serverAuthConfig.authorizationServers.length) {
+        console.warn(
+          'WARNING: no --auth-server given; generated server cannot validate tokens until ' +
+          'MCP_AUTHORIZATION_SERVERS / MCP_JWKS_URI are set in its environment.',
+        );
+      }
+
       // Create generator configuration
       const generatorConfig = {
         serverName,
         serverVersion: options.version || config.serverVersion || '1.0.0',
         serverDescription: options.description || config.serverDescription || `MCP server for ${parsedSpec.title}`,
         outputDir: options.output,
-        httpPort: config.httpPort || 8080,
+        httpPort: config.httpPort || 3000,
         transport: config.transport || 'http',
         generateTypes: config.generateTypes !== false,
         providerConfig: config.providerConfig || {},
         authConfig: config.authConfig || {},
-        includeExamples: config.includeExamples !== false
+        includeExamples: config.includeExamples !== false,
+        serverAuthConfig,
       };
       
       // Generate MCP server
