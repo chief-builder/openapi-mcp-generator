@@ -2,9 +2,9 @@
 
 ```json
 {
-"jsonrpc": "2.0",
-"id": "1",
-"method": "tools.list"
+  "jsonrpc": "2.0",
+  "id": "1",
+  "method": "tools/list"
 }
 ```
 
@@ -12,14 +12,13 @@
 
 ```json
 {
-"jsonrpc": "2.0",
-"id": "2",
-"method": "tools.call",
-"params": {
-  "tool": "${sampleOperationId}",
-  "parameters": {
-    // Add parameters here based on the tool's requirements
+  "jsonrpc": "2.0",
+  "id": "2",
+  "method": "tools/call",
+  "params": {
+    "name": "${sampleToolName}",
+    "arguments": {
+    }
   }
-}
 }
 ```

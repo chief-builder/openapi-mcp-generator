@@ -2,453 +2,267 @@
 
 ![Version](https://img.shields.io/badge/version-0.2.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
-![Tests](https://img.shields.io/badge/tests-passing-brightgreen.svg)
 
-Generate [Model Context Protocol (MCP)](https://modelcontextprotocol.io) servers from OpenAPI specifications. Generated servers are built on the **official `@modelcontextprotocol/sdk`**, speak MCP over **stateless Streamable HTTP** (the 2026-07-28 architectural model), and are **OAuth 2.1 resource servers** out of the box.
+Generate secure [Model Context Protocol (MCP)](https://modelcontextprotocol.io) servers from OpenAPI 3 JSON specifications.
 
-## Overview
+The generated servers are TypeScript projects built on the official `@modelcontextprotocol/sdk`. They expose OpenAPI operations as MCP tools over stateless Streamable HTTP and run as OAuth 2.1 resource servers.
 
-The generator turns an OpenAPI spec into a real MCP server that exposes each operation as an MCP tool. The emitted server:
+![OpenAPI to MCP generation flow](./docs/assets/generation-flow.png)
 
-- uses the SDK's `McpServer` over `StreamableHTTPServerTransport` in **stateless mode** — real `initialize` / `tools/list` / `tools/call`, no bespoke JSON-RPC, no sessions;
-- is an **OAuth 2.1 resource server** (MCP Authorization spec): publishes Protected Resource Metadata (RFC 9728), challenges with `WWW-Authenticate`, and validates that every token's `aud` names this server (RFC 8707 audience binding);
-- **never forwards the caller's token upstream** — the upstream API credential is a separate secret (no confused-deputy);
-- validates tool inputs with **zod**, binds **loopback** by default, and checks **Origin / Host** (DNS-rebinding).
+## What This Generates
 
-> The protocol wire version is whatever the installed SDK negotiates (currently `2025-11-25`, moving to `2026-07-28` as the SDK lands it). Bump the SDK to move the wire version — no regeneration needed.
+Each generated server contains:
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  OpenAPI Spec   │────>│  MCP Generator  │────>│   MCP Server    │
-│                 │     │                 │     │                 │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                                                        │
-                                                        │
-                                                        ▼
-                                             ┌─────────────────┐
-                                             │                 │
-                                             │  AI Assistant   │
-                                             │                 │
-                                             └─────────────────┘
-```
+- `src/index.ts` - entry point that starts the server.
+- `src/mcp-server.ts` - SDK-based MCP server, Streamable HTTP transport, tool registration, upstream API routing, and request guards.
+- `src/oauth-resource-server.ts` - Protected Resource Metadata and JWT verification helpers.
+- `package.json`, `tsconfig.json`, and generated `README.md`.
 
-## Features
+![Generated project anatomy](./docs/assets/generated-project-anatomy.png)
 
-- **Official MCP SDK**: generated servers depend on `@modelcontextprotocol/sdk` and speak the real protocol — no hand-rolled JSON-RPC.
-- **Stateless Streamable HTTP**: a fresh server + transport per request (`sessionIdGenerator: undefined`); runs behind a plain load balancer.
-- **OAuth 2.1 resource server**: Protected Resource Metadata (RFC 9728), `WWW-Authenticate` challenges, JWT signature/issuer/expiry validation via `jose`, and RFC 8707 audience binding.
-- **No token passthrough**: upstream credential is a separate env secret by default; `passthrough` is an explicit, warned opt-in.
-- **zod input validation**: each tool's arguments are validated against a schema derived from the OpenAPI operation.
-- **Loopback + DNS-rebinding defense**: binds `127.0.0.1` by default and validates `Origin` / `Host`.
-- **Provider-based mapping**: providers (Stripe, PayPal) contribute tool names/annotations; the secure server is generated centrally — every provider gets the identical hardened server.
+The emitted server:
 
-## Generate a server
-
-```sh
-npm run generate -- \
-  --spec ./openapi.json \
-  --output ./my-mcp-server \
-  --provider stripe \
-  --name my-mcp \
-  --resource-uri https://mcp.example.com/mcp \
-  --auth-server https://auth.example.com/realms/plane \
-  --upstream-auth env-credential
-```
-
-Then in the generated server: `npm install && npm run build && npm start`.
-Configure it at runtime via env: `MCP_RESOURCE_URI`, `MCP_AUTHORIZATION_SERVERS`,
-`MCP_JWKS_URI`, `MCP_REQUIRED_SCOPES`, `UPSTREAM_API_KEY`, `PORT`, `HOST`, `ALLOWED_ORIGINS`.
-
-### Key flags
-
-| Flag | Meaning |
-|---|---|
-| `--resource-uri` | Canonical server URI = the required token audience (RFC 8707) |
-| `--auth-server` | Authorization server issuer URL(s) advertised in Protected Resource Metadata |
-| `--jwks-uri` | JWKS for token signature validation (defaults from `--auth-server`) |
-| `--required-scope` | Scope(s) the server enforces (403 on shortfall) |
-| `--upstream-auth` | `none` \| `env-credential` (default) \| `passthrough` (discouraged) |
-
-## Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/chief-builder/openapi-mcp-generator.git
-cd openapi-mcp-generator
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-```
+- uses `McpServer` and `StreamableHTTPServerTransport` from `@modelcontextprotocol/sdk`;
+- creates a fresh server and transport per request with `sessionIdGenerator: undefined`;
+- serves MCP at `POST /mcp`;
+- rejects `GET /mcp` and `DELETE /mcp` with method-not-allowed responses;
+- publishes Protected Resource Metadata at `/.well-known/oauth-protected-resource`;
+- validates bearer tokens with `jose` against a JWKS URL;
+- enforces token `aud` against the configured MCP resource URI;
+- never forwards the caller token upstream by default;
+- validates tool arguments with `zod`;
+- binds to `127.0.0.1` by default and checks `Host` and `Origin`.
 
 ## Quick Start
 
-### Step 1: Generate an MCP server from an OpenAPI spec
+Install and build the generator:
 
 ```bash
-# Generate an MCP server for Stripe API
-npm run generate -- --provider=stripe --spec=./specs/stripe/openapi/spec3.json --output=./output/stripe-mcp
+npm install
+npm run build
 ```
 
-### Example: Generating a PayPal MCP Server
+List registered providers:
 
 ```bash
-# Generate an MCP server for PayPal API
-npm run generate -- --provider=paypal --spec=./test-resources/paypal-spec.json --output=./output/paypal-mcp
+npm run list-providers
+```
 
-# Navigate to the output directory and install
-cd ./output/paypal-mcp
+Generate a server from an OpenAPI JSON file:
+
+```bash
+npm run generate -- \
+  --spec ./specs/test/simple-spec.json \
+  --output ./output/example-mcp \
+  --provider generic \
+  --name example-mcp \
+  --resource-uri urn:mcp:example \
+  --auth-server https://auth.example.com
+```
+
+Build and run the generated server:
+
+```bash
+cd ./output/example-mcp
 npm install
 npm run build
 
-# Start the server with PayPal credentials
-PAYPAL_CLIENT_ID=your_client_id PAYPAL_CLIENT_SECRET=your_client_secret npm start
+MCP_RESOURCE_URI=urn:mcp:example \
+MCP_AUTHORIZATION_SERVERS=https://auth.example.com \
+MCP_JWKS_URI=https://auth.example.com/.well-known/jwks.json \
+UPSTREAM_API_KEY=your_upstream_api_key \
+npm start
 ```
 
-### Step 2: Install and start the generated server
+The generated server listens at `http://127.0.0.1:3000/mcp` unless `HOST` or `PORT` is set.
+
+## CLI Reference
+
+Primary command:
 
 ```bash
-# Navigate to the output directory
-cd ./output/stripe-mcp
-
-# Install dependencies
-npm install
-
-# Build the server
-npm run build
-
-# Start the server
-STRIPE_API_KEY=your_api_key npm start
+npm run generate -- --spec <openapi.json> --output <dir> [options]
 ```
 
-### Step 3: Interact with the server using MCP
+Common options:
 
-```json
-// List available tools
-{
-  "jsonrpc": "2.0",
-  "id": "1",
-  "method": "tools.list"
-}
+| Option | Default | Description |
+|---|---:|---|
+| `--spec <path>` | required | OpenAPI 3 JSON file. YAML parsing is not implemented. |
+| `--output <dir>` | required | Directory for the generated server project. |
+| `--provider <name>` | `stripe` | Registered provider: `generic`, `stripe`, or `paypal`. |
+| `--name <name>` | derived from spec title | Generated server/package name. |
+| `--version <version>` | `1.0.0` | Generated server version. |
+| `--description <text>` | derived from spec title | Generated server description. |
+| `--config <path>` | none | JSON config file merged with CLI options. |
+| `--resource-uri <uri>` | `urn:mcp:<server-name>` | Canonical MCP resource URI and required JWT audience. |
+| `--auth-server <url...>` | none | Authorization server issuer URL(s) advertised in metadata. |
+| `--jwks-uri <url>` | derived from first auth server when possible | JWKS endpoint used for token verification. |
+| `--issuer <url>` | first auth server | Expected JWT `iss`. |
+| `--required-scope <scope...>` | none | Baseline scopes enforced by SDK bearer middleware. |
+| `--upstream-auth <mode>` | `env-credential` | `none`, `env-credential`, or `passthrough`. |
+| `--upstream-base-url <url>` | first OpenAPI `servers[0].url` | Runtime upstream API base URL. |
+| `--allow-token-passthrough` | false | Shortcut for `--upstream-auth passthrough`; discouraged. |
+| `--authz-hook` | false | Emit a call to local `./authz-hook.ts` before each tool call. |
+| `--groups-claim <name>` | `groups` | JWT claim used by `x-mcp-group` tool visibility. |
 
-// Call a specific tool
-{
-  "jsonrpc": "2.0",
-  "id": "2",
-  "method": "tools.call",
-  "params": {
-    "tool": "postCustomers",
-    "parameters": {
-      "email": "customer@example.com",
-      "name": "Test Customer"
-    }
-  }
-}
+Provider listing:
+
+```bash
+npm run list-providers
 ```
 
-## Architecture
+Stripe shortcut:
 
-### Core Components
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        Core Components                       │
-├────────────┬────────────┬─────────────┬────────────┬────────┤
-│            │            │             │            │        │
-│   Parser   │ Generator  │  Registry   │  Templates │ Models │
-│            │            │             │            │        │
-└────────────┴────────────┴─────────────┴────────────┴────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Provider Implementations                │
-├────────────────┬───────────────┬──────────────┬─────────────┤
-│                │               │              │             │
-│ Stripe Provider│ PayPal Provider│ Other       │ Your        │
-│                │               │ Provider     │ Provider    │
-└────────────────┴───────────────┴──────────────┴─────────────┘
+```bash
+npm run dev -- stripe-test --output ./output/stripe-mcp
 ```
 
-### MCP Server Structure
+## Runtime Configuration
 
-```
-┌───────────────────────────────────────────────────────────┐
-│                     MCP Server                             │
-├───────────────┬───────────────┬───────────────────────────┤
-│               │               │                           │
-│ Server Module │ Auth Provider │ Tool Implementations      │
-│               │               │                           │
-└───────┬───────┴───────┬───────┴─────────────┬─────────────┘
-        │               │                     │
-        ▼               ▼                     ▼
-┌───────────────┐ ┌────────────┐    ┌─────────────────────┐
-│ HTTP Transport│ │ JSON-RPC   │    │ API Client          │
-│               │ │ Handler    │    │ (Stripe, etc.)      │
-└───────────────┘ └────────────┘    └─────────────────────┘
-```
+Generated servers are configured through environment variables:
 
-## Providers
+| Variable | Purpose |
+|---|---|
+| `HOST` | Bind host. Defaults to `127.0.0.1`. |
+| `PORT` | Bind port. Defaults to the generation config, usually `3000`. |
+| `PUBLIC_BASE_URL` | Public server base URL used in resource metadata challenges. |
+| `MCP_RESOURCE_URI` | Required token audience. Overrides generation-time `--resource-uri`. |
+| `MCP_AUTHORIZATION_SERVERS` | Comma-separated authorization server issuer URLs. |
+| `MCP_JWKS_URI` | JWKS URL used by `jose` token verification. |
+| `MCP_ISSUER` | Expected token issuer. |
+| `MCP_REQUIRED_SCOPES` | Comma-separated baseline scopes required for all MCP requests. |
+| `ALLOWED_ORIGINS` | Comma-separated browser origins allowed through the Origin guard. |
+| `UPSTREAM_BASE_URL` | Upstream REST API base URL. Overrides the OpenAPI server URL. |
+| `UPSTREAM_API_KEY` | Separate upstream credential used when `upstream-auth` is `env-credential`. |
 
-The system currently supports the following providers:
+## Security Model
 
-| Provider | Description                        | Status      | Tools Count |
-|----------|------------------------------------|-------------|-------------|
-| Stripe   | Stripe Payments API                | Implemented | 557         |
-| PayPal   | PayPal Payments and Orders API     | Implemented | 8           |
-| Generic  | Generic OpenAPI provider           | Planned     | -           |
-| Custom   | Support for custom implementations | Supported   | -           |
+Generated servers are OAuth 2.1 resource servers. They validate the caller's bearer token before handling MCP requests and require the JWT audience to identify this MCP server.
 
-## Development
+![Generated server security model](./docs/assets/security-model.png)
 
-### Project Structure
+Important boundaries:
 
-```
-.
-├── src
-│   ├── cli              # Command-line interface
-│   ├── core             # Core components
-│   │   ├── generator    # MCP server generation logic
-│   │   ├── models       # Type definitions
-│   │   ├── parser       # OpenAPI parser
-│   │   ├── registry     # Provider registry
-│   │   ├── templates    # Core templates
-│   │   ├── transports   # Transport implementations
-│   │   └── utils        # Utility functions
-│   ├── providers        # API providers
-│   │   ├── stripe       # Stripe API implementation
-│   │   └── paypal       # PayPal API implementation
-│   └── test             # Tests
-└── output               # Generated servers
-```
+- The MCP access token authenticates the caller to the MCP server.
+- The upstream API credential authenticates the MCP server to the upstream REST API.
+- These credentials are separate by default.
+- `passthrough` mode forwards the caller token upstream and should be used only when the upstream API is intentionally the same protected resource.
+- `x-mcp-scope` on an OpenAPI operation becomes a per-tool execution scope. Missing scope returns `403 insufficient_scope`.
+- `x-mcp-group` on an OpenAPI operation controls tool visibility in `tools/list` based on the configured groups claim.
 
-### Adding a New Provider
+See [Transport Security](./docs/TRANSPORT-SECURITY.md) for the concrete request guards emitted into generated servers.
 
-1. Create a new provider directory under `src/providers/`
-2. Implement the `IProvider` interface
-3. Add templates for provider-specific code generation
-4. Register the provider in `src/providers/index.ts`
+## Provider Model
 
-```typescript
-// Example provider implementation
-import { IProvider } from '../../core/models/provider';
+Providers do two jobs:
 
-export class MyProvider implements IProvider {
+1. Parse vendor-specific OpenAPI details when needed.
+2. Map parsed operations to MCP tool names, descriptions, annotations, and metadata.
+
+The actual server implementation is generated centrally from shared templates. Provider-specific server template trees are no longer used.
+
+Registered providers:
+
+| Provider | Use case | Notes |
+|---|---|---|
+| `generic` | Arbitrary OpenAPI specs | Uses base parsing and operation IDs as the naming source. |
+| `stripe` | Stripe OpenAPI specs | Adds Stripe naming and tool annotations. |
+| `paypal` | PayPal OpenAPI specs | Adds PayPal path-derived operation IDs and naming. |
+
+To add a provider:
+
+1. Create `src/providers/<name>/provider.ts`.
+2. Implement `IProvider` from `src/core/models/provider.ts`.
+3. Register it in `src/providers/index.ts`.
+4. Add focused tests for parsing and tool mapping.
+
+Minimal provider:
+
+```ts
+import * as path from 'path';
+import { BaseProvider } from '../../core/models/base-provider';
+
+export class MyProvider extends BaseProvider {
   readonly name = 'my-provider';
   readonly version = '1.0.0';
-  readonly description = 'My custom provider';
-  
-  // Implement required methods...
+  readonly description = 'My OpenAPI provider';
+
+  protected get templatesDir(): string {
+    return path.join(__dirname, 'templates');
+  }
 }
 ```
 
-## Testing Generated Servers
+## OpenAPI Support
 
-### Testing Strategy
-The OpenAPI MCP Generator has a comprehensive testing strategy combining unit tests and integration tests to ensure reliability and correctness.
+Currently supported:
 
-- **Unit Tests**
-    Unit tests focus on testing individual components in isolation:
-    1. Parser Tests: Verify that OpenAPI specifications are correctly parsed.
-    2. Generator Tests: Ensure code generation works as expected with different inputs.
-    3. Provider Tests: Test provider-specific functionality like mapping operations to tools.
-    4. Utility Tests: Test helper functions and utilities like naming conventions.
+- OpenAPI 3.x documents.
+- JSON input files.
+- Path, query, and JSON request-body properties.
+- Operation-level `x-mcp-scope` and `x-mcp-group`.
+- Operation IDs, summaries, descriptions, tags, responses, security, and components.
 
-- **Integration Tests**
-    Integration tests verify that components work correctly together:
-    1. Parser-Generator Integration: Tests the flow from parsing a specification to generating code.
-    2. Provider Integration: Verifies that providers correctly implement all required interfaces.
-    3. Server Generation: Tests generation of server files with correct structure.
-    4. Full Integration: End-to-end tests from specification to server generation.
+Current limitations:
 
-- **Running Tests**
-  - Run Unit Tests: `npm run test`
-  - Run Integration Tests: `npm run test:integration`
-  - Run All Tests: `npm run test:all`
+- YAML parsing is intentionally not implemented.
+- `$ref` parameter resolution is placeholder-level in the parser.
+- Request-body routing currently flattens JSON object properties into tool arguments.
+- Non-JSON request bodies are not deeply modeled.
 
-### Testing the Stripe MCP Server
+## Testing
 
-#### Method 1: Using the test script
-
-1. Make sure you have a Stripe test API key
-2. Run the test script with your API key:
+Run the test suite:
 
 ```bash
-STRIPE_API_KEY=sk_test_your_test_key_here node test-stripe-server.js
+npm test
 ```
 
-#### Method 2: Manual testing with curl
+Run integration tests:
 
 ```bash
-# Start the server
-cd stripe-mcp
-API_KEY=sk_test_your_test_key_here npm run dev
-
-# In another terminal, get list of tools
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": "2",
-    "method": "tools.list"
-  }'
-
-# Create a customer
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer sk_test_your_test_key_here" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": "4",
-    "method": "tools.call",
-    "params": {
-      "tool": "createCustomer",
-      "parameters": {
-        "email": "test@example.com",
-        "name": "Test Customer"
-      }
-    }
-  }'
+npm run test:integration
 ```
 
-### Testing the PayPal MCP Server
-
-#### Method 1: Using the test script with environment variables
-
-1. Create a `.env` file based on the `.env.sample` template
-2. Add your PayPal sandbox credentials to the `.env` file
-3. Run the test script:
+Run the generated-server runtime smoke test:
 
 ```bash
-# The script will load credentials from your .env file
-node test-paypal-server-with-helper.js
+npm run test:e2e
 ```
 
-#### Method 2: Using the test script with inline credentials (not recommended)
+Run linting:
 
 ```bash
-PAYPAL_CLIENT_ID=your_client_id PAYPAL_CLIENT_SECRET=your_client_secret node test-paypal-server.js
+npm run lint
 ```
 
-#### Method 3: Manual testing with curl
+## Repository Layout
 
-```bash
-# Start the server (using .env file recommended)
-cd paypal-payment-server
-CLIENT_ID=your_client_id CLIENT_SECRET=your_client_secret npm run dev
-
-# In another terminal, create a PayPal order
-curl -X POST http://localhost:8080 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "jsonrpc": "2.0",
-    "id": "3",
-    "method": "tools.call",
-    "params": {
-      "tool": "ordersCreate",
-      "parameters": {
-        "intent": "CAPTURE",
-        "purchase_units": [{
-          "amount": {
-            "currency_code": "USD",
-            "value": "100.00"
-          }
-        }]
-      }
-    }
-  }'
+```text
+src/
+  cli/                 CLI entry point.
+  core/
+    generator/         Shared generated-server assembly.
+    models/            Parser, provider, generator, and MCP types.
+    parser/            OpenAPI 3 parser.
+    registry/          Provider registry.
+    templates/         Generated project templates.
+    utils/             Template, string, and API helpers.
+  providers/
+    generic/           Base OpenAPI provider.
+    stripe/            Stripe-specific parser/tool mapping.
+    paypal/            PayPal-specific parser/tool mapping.
+  test/                Unit, integration, and e2e tests.
+docs/
+  assets/              Documentation images generated with imagegen.
+  examples/            Example generated-server usage.
+specs/
+  stripe/              Stripe OpenAPI fixture.
+  paypal/              PayPal OpenAPI fixtures.
+  test/                Small test specifications.
 ```
-
-## Customizing Generated Servers
-
-The generated servers can be customized in several ways:
-
-1. **Modify templates**: Edit template files in `src/core/templates/` or provider-specific templates
-2. **Add custom prompts**: Create custom prompts in the provider implementation
-3. **Extend the generated code**: Add additional functionality to generated servers
-
-## Transport Security
-
-The OpenAPI MCP Generator includes robust transport security features to protect your MCP servers:
-
-- **Localhost Binding**: By default, servers only accept connections from localhost
-- **CORS Protection**: Configurable allowed origins to prevent cross-site attacks
-- **Rate Limiting**: Protection against DoS attacks with customizable limits
-- **Request Size Limiting**: Prevents request body overflow attacks
-- **Content Type Validation**: Ensures proper content types for all requests
-- **Request Timeout**: Configurable timeouts to prevent resource exhaustion
-
-For detailed security configuration options and best practices, see the [Transport Security Guide](./docs/TRANSPORT-SECURITY.md).
-
-### Example Security Configuration
-
-```typescript
-const serverConfig = {
-  // Server configuration
-  serverName: "My Secure MCP Server",
-  serverVersion: "1.0.0",
-  transport: "http",
-  httpPort: 8080,
-
-  // Security configuration
-  security: {
-    bindToLocalhost: true,
-    allowedOrigins: ["https://myapp.example.com"],
-    maxRequestBodySize: 1048576, // 1MB
-    requestTimeoutMs: 30000,
-    validateContentType: true,
-    rateLimit: {
-      maxRequestsPerMinute: 100,
-      windowMs: 60000
-    }
-  }
-};
-```
-
-## Multi-Provider Support
-
-The OpenAPI MCP Generator now supports multiple API providers:
-
-- **Stripe**: For payment processing, subscriptions, and financial services (557 tools)
-- **PayPal**: For payment processing, orders, and checkout flows (8 tools)
-- **Custom Providers**: Extend the system with your own provider implementations
-
-Each provider includes specialized adapters for:
-
-- **Parameter Mapping**: Converts between OpenAPI parameters and provider-specific formats
-- **Handler Generation**: Creates optimized handlers for provider-specific operations
-- **Templates**: Provider-specific templates for generating specialized code
-- **Authentication**: Provider-specific authentication methods (API keys, OAuth, etc.)
-
-To use a specific provider, use the `--provider` flag when generating your MCP server:
-
-```bash
-npm run generate -- --provider=stripe --spec=./path/to/spec.json --output=./output/my-server
-npm run generate -- --provider=paypal --spec=./path/to/spec.json --output=./output/my-server
-```
-
-## Sample Test Output Highlights
-
-The project includes sample test outputs showing the functionality of generated MCP servers:
-
-### Stripe MCP Server:
-- **Transport Security**: HTTP server with proper security and rate limiting
-- **Tools Coverage**: 557 tools covering the entire Stripe API
-- **Dynamic Execution**: Automatic mapping of REST operations to MCP tools
-- **Resource Management**: Complete CRUD operations on all Stripe resources
-- **JSON-RPC**: Full JSON-RPC 2.0 request/response protocol support
-
-### PayPal MCP Server:
-- **Authentication**: OAuth 2.0 flow with automatic token management
-- **Transport Security**: HTTP server with robust security features
-- **Tools Support**: 8 tools covering all operations in the PayPal Orders API
-- **Order Management**: Complete order creation and processing workflow
-- **API Integration**: Direct integration with PayPal's API endpoints
-
-For more details, see [Sample_Functional_Test_Output.md](./Sample_Functional_Test_Output.md)
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT. See [LICENSE](./LICENSE).

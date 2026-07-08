@@ -415,14 +415,24 @@ export class MCPGenerator implements IMCPGenerator {
   ): Promise<void> {
     // Generate the authentication documentation
     const authDoc = await this.getAuthenticationDoc(provider);
+
+    const providerTools = provider.mapOperationsToTools(spec.endpoints);
+    const toolByOperationId = new Map<string, any>();
+    for (const tool of providerTools) {
+      const operationId = tool.metadata?.operationId || tool.id;
+      toolByOperationId.set(operationId, tool);
+    }
     
     // Generate the example requests
     const exampleRequests = await this.getExampleRequests(spec, provider);
     
     // Generate the tools list
-    const toolsList = spec.endpoints.slice(0, 10).map(endpoint => 
-      `- \`${endpoint.operationId}\`: ${endpoint.summary || endpoint.description || 'No description'}`
-    ).join('\n');
+    const toolsList = spec.endpoints.slice(0, 10).map(endpoint => {
+      const tool = toolByOperationId.get(endpoint.operationId);
+      const toolName = tool?.name || endpoint.operationId;
+      const description = tool?.description || endpoint.summary || endpoint.description || 'No description';
+      return `- \`${toolName}\`: ${description}`;
+    }).join('\n');
     
     const toolsExtra = spec.endpoints.length > 10 
       ? `\n...and ${spec.endpoints.length - 10} more` 
@@ -470,11 +480,16 @@ private async getExampleRequests(spec: IParsedSpec, provider: IProvider): Promis
   if (!sampleEndpoint) {
     return 'No endpoints available for examples.';
   }
+
+  const providerTools = provider.mapOperationsToTools(spec.endpoints);
+  const sampleTool = providerTools.find((tool) =>
+    (tool.metadata?.operationId || tool.id) === sampleEndpoint.operationId
+  );
   
   // Load and render the example requests template
   const templatePath = TemplateLoader.getCoreTemplatePath('example-requests.md.template');
   const variables = {
-    sampleOperationId: sampleEndpoint.operationId
+    sampleToolName: sampleTool?.name || sampleEndpoint.operationId
   };
   
   return await TemplateLoader.loadAndRenderTemplate(templatePath, variables);

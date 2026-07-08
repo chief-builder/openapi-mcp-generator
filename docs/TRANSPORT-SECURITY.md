@@ -1,235 +1,138 @@
-# MCP Transport Security Guide
+# Transport Security
 
-This document describes the security features of the MCP transport layer and provides guidelines for secure implementation.
+This document describes the security controls emitted into generated servers by the current generator.
 
-## Table of Contents
+Generated servers are Express applications that expose MCP over stateless Streamable HTTP at `POST /mcp`. They are designed to be OAuth 2.1 resource servers, not authorization servers and not upstream API credential brokers.
 
-- [Introduction](#introduction)
-- [Security Features](#security-features)
-  - [Localhost Binding](#localhost-binding)
-  - [CORS Protection](#cors-protection)
-  - [Request Size Limiting](#request-size-limiting)
-  - [Rate Limiting](#rate-limiting)
-  - [Content Type Validation](#content-type-validation)
-  - [Request Timeout](#request-timeout)
-- [Security Configuration](#security-configuration)
-- [Examples](#examples)
-  - [Basic Secure Configuration](#basic-secure-configuration)
-  - [Production Configuration](#production-configuration)
-  - [Development Configuration](#development-configuration)
-- [Security Best Practices](#security-best-practices)
+## Request Flow
 
-## Introduction
+1. Express parses JSON request bodies with a `1mb` limit.
+2. `securityGuard` validates `Host` and `Origin`.
+3. `requireBearerAuth` validates the bearer token.
+4. Per-tool scope middleware checks `x-mcp-scope` for `tools/call`.
+5. A fresh `McpServer` and `StreamableHTTPServerTransport` handle the request.
+6. Tool handlers call the upstream REST API using the configured upstream auth mode.
 
-The MCP transport layer is responsible for the communication between clients and MCP servers. It provides security features to protect against common web vulnerabilities and attacks, such as cross-site request forgery (CSRF), distributed denial of service (DDoS), and request smuggling.
+## Bind Address
 
-## Security Features
+Generated servers bind to loopback by default:
 
-### Localhost Binding
-
-By default, MCP servers are bound to localhost (127.0.0.1) only, preventing direct access from the network. This is a security measure to ensure that only local clients can connect to the server.
-
-To expose the server to the network, you must explicitly disable localhost binding:
-
-```typescript
-const config = {
-  // ... other configuration
-  security: {
-    bindToLocalhost: false // Not recommended for production
-  }
-};
+```bash
+HOST=127.0.0.1
 ```
 
-### CORS Protection
+When `HOST` is `127.0.0.1`, the generated guard rejects unexpected `Host` headers unless `ALLOWED_ORIGINS` is configured. This reduces DNS-rebinding exposure for local servers.
 
-Cross-Origin Resource Sharing (CORS) is a security feature that controls which web origins are allowed to access the MCP server. By default, only localhost origins are allowed.
+To expose a server beyond loopback, set `HOST` explicitly and put the process behind a production reverse proxy:
 
-To configure allowed origins:
-
-```typescript
-const config = {
-  // ... other configuration
-  security: {
-    allowedOrigins: [
-      'http://localhost:3000',
-      'https://example.com'
-    ]
-  }
-};
+```bash
+HOST=0.0.0.0
+PUBLIC_BASE_URL=https://mcp.example.com
 ```
 
-**Warning:** Setting `allowedOrigins` to `['*']` allows all origins and is not recommended for production use.
+Use HTTPS at the proxy or hosting layer.
 
-### Request Size Limiting
+## Origin Guard
 
-To prevent denial of service attacks and resource exhaustion, the MCP server limits the size of request bodies. The default limit is 1 MB.
+Browser requests with an `Origin` header must match `ALLOWED_ORIGINS`.
 
-To configure the request size limit:
-
-```typescript
-const config = {
-  // ... other configuration
-  security: {
-    maxRequestBodySize: 2 * 1024 * 1024 // 2 MB
-  }
-};
+```bash
+ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
 ```
 
-### Rate Limiting
+Default behavior is intentionally restrictive: no browser origins are allowed unless configured.
 
-Rate limiting protects against abuse and DoS attacks by limiting the number of requests that can be made in a time window. The default limit is 100 requests per minute.
+## OAuth Resource Server Controls
 
-To configure rate limiting:
+Generated servers publish Protected Resource Metadata:
 
-```typescript
-const config = {
-  // ... other configuration
-  security: {
-    rateLimit: {
-      maxRequestsPerMinute: 200, // Increase the limit
-      windowMs: 60000 // 1 minute window
-    }
-  }
-};
+```text
+GET /.well-known/oauth-protected-resource
 ```
 
-### Content Type Validation
+Token validation checks:
 
-The MCP server validates that requests use the correct content type (`application/json`) to prevent content type mismatch attacks. This validation is enabled by default.
+- JWT signature using `MCP_JWKS_URI`;
+- issuer using `MCP_ISSUER` or the first `MCP_AUTHORIZATION_SERVERS` entry;
+- expiry through JWT verification;
+- audience using `MCP_RESOURCE_URI`.
 
-To disable content type validation (not recommended):
+Required variables for a deployable protected server:
 
-```typescript
-const config = {
-  // ... other configuration
-  security: {
-    validateContentType: false // Not recommended
-  }
-};
+```bash
+MCP_RESOURCE_URI=https://mcp.example.com/mcp
+MCP_AUTHORIZATION_SERVERS=https://auth.example.com
+MCP_JWKS_URI=https://auth.example.com/.well-known/jwks.json
+PUBLIC_BASE_URL=https://mcp.example.com
 ```
 
-### Request Timeout
+Optional baseline scopes:
 
-To prevent resource exhaustion from long-running requests, the MCP server applies a timeout to each request. The default timeout is 30 seconds.
-
-To configure the request timeout:
-
-```typescript
-const config = {
-  // ... other configuration
-  security: {
-    requestTimeoutMs: 60000 // 60 seconds
-  }
-};
+```bash
+MCP_REQUIRED_SCOPES=payments.read,payments.write
 ```
 
-## Security Configuration
+## Per-Tool Authorization
 
-The security configuration is specified in the server configuration object:
+OpenAPI operation extensions are carried into generated tool descriptors:
 
-```typescript
-import { IMCPServerConfig } from './mcp-types';
-
-const config: IMCPServerConfig = {
-  serverName: 'My MCP Server',
-  serverVersion: '1.0.0',
-  transport: 'http',
-  httpPort: 8080,
-  security: {
-    bindToLocalhost: true,
-    allowedOrigins: ['http://localhost:3000'],
-    maxRequestBodySize: 1048576, // 1 MB
-    requestTimeoutMs: 30000, // 30 seconds
-    validateContentType: true,
-    rateLimit: {
-      maxRequestsPerMinute: 100,
-      windowMs: 60000 // 1 minute
-    }
-  }
-};
+```json
+{
+  "operationId": "captureOrder",
+  "x-mcp-scope": "orders.capture",
+  "x-mcp-group": "payments-admin"
+}
 ```
 
-## Examples
+`x-mcp-scope` is enforced on `tools/call`. If the caller lacks the tool scope, the server returns `403 insufficient_scope` and includes the needed scope in `WWW-Authenticate`.
 
-### Basic Secure Configuration
+`x-mcp-group` controls visibility. Tools with a required group are only registered for callers whose validated token contains that group in the configured groups claim. The claim defaults to `groups` and can be changed at generation time with `--groups-claim`.
 
-This configuration provides good security for most use cases:
+## Upstream Authentication
 
-```typescript
-const config = {
-  serverName: 'My MCP Server',
-  serverVersion: '1.0.0',
-  transport: 'http',
-  httpPort: 8080,
-  security: {
-    // Use default security settings
-  }
-};
+The generated server separates MCP caller identity from upstream API credentials.
+
+Modes:
+
+| Mode | Behavior |
+|---|---|
+| `env-credential` | Default. Uses `UPSTREAM_API_KEY` as `Authorization: Bearer <key>` for upstream calls. |
+| `none` | Sends no upstream authorization header. |
+| `passthrough` | Forwards the caller's bearer token upstream. Discouraged unless the upstream API intentionally accepts the same resource token. |
+
+Default mode:
+
+```bash
+UPSTREAM_API_KEY=upstream_secret
 ```
 
-### Production Configuration
+Passthrough can be selected with `--upstream-auth passthrough` or `--allow-token-passthrough`; the CLI prints a warning because this can create confused-deputy risk.
 
-For production environments with multiple frontends:
+## Method Surface
 
-```typescript
-const config = {
-  serverName: 'Production MCP Server',
-  serverVersion: '1.0.0',
-  transport: 'http',
-  httpPort: 8080,
-  security: {
-    bindToLocalhost: false, // Allow network access (use reverse proxy)
-    allowedOrigins: [
-      'https://app.example.com',
-      'https://admin.example.com'
-    ],
-    maxRequestBodySize: 5 * 1024 * 1024, // 5 MB
-    requestTimeoutMs: 60000, // 60 seconds
-    rateLimit: {
-      maxRequestsPerMinute: 300,
-      windowMs: 60000 // 1 minute
-    }
-  }
-};
+Generated servers support:
+
+```text
+POST /mcp
+GET /.well-known/oauth-protected-resource
 ```
 
-### Development Configuration
+Generated servers reject:
 
-For local development:
-
-```typescript
-const config = {
-  serverName: 'Dev MCP Server',
-  serverVersion: '1.0.0',
-  transport: 'http',
-  httpPort: 8080,
-  security: {
-    bindToLocalhost: true,
-    allowedOrigins: [
-      'http://localhost:3000',
-      'http://localhost:8000',
-      'http://127.0.0.1:*'
-    ],
-    maxRequestBodySize: 10 * 1024 * 1024, // 10 MB for easier debugging
-    requestTimeoutMs: 120000, // 2 minutes for debugging
-    rateLimit: {
-      maxRequestsPerMinute: 1000 // High limit for development
-    }
-  }
-};
+```text
+GET /mcp
+DELETE /mcp
 ```
 
-## Security Best Practices
+The generated transport is stateless. There is no server-side session teardown endpoint and no server-initiated stream.
 
-1. **Always bind to localhost** unless you need to expose the server to the network.
-2. **Use HTTPS** when exposing the server to the network.
-3. **Limit allowed origins** to only the domains that need access.
-4. **Use a reverse proxy** (like Nginx or Apache) in front of the MCP server for additional security.
-5. **Set appropriate rate limits** based on expected usage patterns.
-6. **Monitor server logs** for suspicious activity.
-7. **Keep dependencies updated** to address security vulnerabilities.
-8. **Use authentication** for all tool calls when possible.
-9. **Implement consent management** for sensitive operations.
-10. **Regularly audit your security configuration** for potential weaknesses.
+## Deployment Checklist
 
-By following these guidelines, you can secure your MCP server against common attacks and vulnerabilities.
+- Set `PUBLIC_BASE_URL` to the externally reachable HTTPS origin.
+- Set `MCP_RESOURCE_URI` to the exact audience your authorization server issues.
+- Set `MCP_AUTHORIZATION_SERVERS`, `MCP_JWKS_URI`, and, when needed, `MCP_ISSUER`.
+- Keep `upstream-auth` as `env-credential` unless token passthrough is a deliberate resource-server design.
+- Set `UPSTREAM_API_KEY` through your secret manager.
+- Configure `ALLOWED_ORIGINS` only for browser clients that must call the server directly.
+- Prefer loopback binding behind a reverse proxy when possible.
+- Run generated servers on Node 20 or newer.
