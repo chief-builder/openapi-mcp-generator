@@ -1,7 +1,0 @@
-// Format the path based on resource and ID
-      const path = '${version}/${resource}/' + params.id;
-      
-      // Execute the request
-      const ${resource} = await paypal.get(path);
-      
-      return ${resource};

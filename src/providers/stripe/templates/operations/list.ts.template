@@ -1,2 +1,0 @@
-      const ${resource} = await stripe.${resource}.list(params);
-      return ${resource};
