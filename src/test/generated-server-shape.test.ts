@@ -91,7 +91,7 @@ describe('generated server shape', () => {
   });
 
   test('does NOT pass the caller token upstream by default (confused-deputy fix)', () => {
-    expect(server).toContain("const UPSTREAM_AUTH_MODE = 'env-credential'");
+    expect(server).toContain("UPSTREAM_AUTH_MODE: string = 'env-credential'");
     // passthrough must be an explicit, guarded branch — never the default.
     expect(server).toContain("UPSTREAM_AUTH_MODE === 'passthrough'");
   });
@@ -116,5 +116,67 @@ describe('generated server shape', () => {
     expect(fs.existsSync(path.join(outDir, 'src', 'shape-mcp-server.ts'))).toBe(false);
     expect(server).not.toContain('tools.list'); // old dot-notation
     expect(server).not.toContain('createServer('); // old hand-rolled http
+  });
+});
+
+describe('generated server authorization (per-tool scope/group + hook)', () => {
+  let outDir: string;
+  let server: string;
+
+  const AUTHZ_SPEC = {
+    openapi: '3.0.0',
+    info: { title: 'AuthZ', version: '1.0.0' },
+    servers: [{ url: 'https://api.example.com' }],
+    paths: {
+      '/clinical/{id}': {
+        get: {
+          operationId: 'getClinical',
+          'x-mcp-group': 'mcp-clinical-tools',
+          'x-mcp-scope': 'mcp:clin:read:read',
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+          responses: { '200': { description: 'ok' } },
+        },
+      },
+    },
+  };
+
+  beforeAll(async () => {
+    TemplateLoader.setTestMode(false);
+    TemplateLoader.clearCache();
+    outDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-authz-'));
+    const { GenericProvider } = await import('../providers/generic/provider');
+    const provider = new GenericProvider();
+    const spec = provider.parseOpenAPISpec(AUTHZ_SPEC);
+    await new MCPGenerator().generate(spec, provider, {
+      serverName: 'authz-mcp', serverVersion: '1.0.0', outputDir: outDir, httpPort: 8080,
+      serverAuthConfig: {
+        resourceUri: 'https://mcp.example.com/mcp',
+        authorizationServers: ['https://auth.example.com'],
+        upstreamAuth: 'none', authzHook: true,
+      },
+    });
+    server = await fs.readFile(path.join(outDir, 'src', 'mcp-server.ts'), 'utf8');
+  });
+
+  afterAll(async () => {
+    TemplateLoader.setTestMode(true);
+    if (outDir) await fs.remove(outDir);
+  });
+
+  test('carries per-tool scope and group from x-mcp-* extensions', () => {
+    const tools = JSON.parse(server.match(/const TOOLS[^=]*=\s*(\[[\s\S]*?\]);/)![1]);
+    expect(tools[0].requiredScope).toBe('mcp:clin:read:read');
+    expect(tools[0].requiredGroup).toBe('mcp-clinical-tools');
+  });
+
+  test('filters tools/list by group and enforces per-tool scope (403 insufficient_scope)', () => {
+    expect(server).toContain('toolVisible'); // list filtered by group
+    expect(server).toContain('enforceToolScope');
+    expect(server).toContain('insufficient_scope');
+  });
+
+  test('wires the optional authorization hook', () => {
+    expect(server).toContain("import { authorize } from './authz-hook.js'");
+    expect(server).toContain('args = await authorize({ auth, tool, args })');
   });
 });

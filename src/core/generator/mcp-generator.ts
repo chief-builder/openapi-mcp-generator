@@ -35,6 +35,10 @@ interface IToolDescriptor {
   pathParams: string[];
   queryParams: string[];
   bodyParams: string[];
+  /** Required scope for execution (from `x-mcp-scope`); missing -> 403 step-up. */
+  requiredScope?: string;
+  /** Required group for visibility (from `x-mcp-group`); filters tools/list. */
+  requiredGroup?: string;
 }
 
 /**
@@ -131,6 +135,8 @@ export class MCPGenerator implements IMCPGenerator {
       requiredScopes: auth.requiredScopes ?? [],
       upstreamAuth: auth.upstreamAuth ?? 'env-credential',
       upstreamBaseUrl: auth.upstreamBaseUrl ?? '',
+      authzHook: auth.authzHook ?? false,
+      groupsClaim: auth.groupsClaim ?? 'groups',
     };
   }
 
@@ -154,6 +160,7 @@ export class MCPGenerator implements IMCPGenerator {
       const queryParams = endpoint.parameters.filter((p) => p.in === 'query').map((p) => p.name);
       const { bodyParams, inputSchema } = this.buildInputSchema(endpoint);
 
+      const ext = endpoint.extensions || {};
       return {
         name: info?.name ?? this.defaultToolName(endpoint.operationId),
         title: info?.annotations?.title,
@@ -165,6 +172,8 @@ export class MCPGenerator implements IMCPGenerator {
         pathParams,
         queryParams,
         bodyParams,
+        requiredScope: ext['x-mcp-scope'],
+        requiredGroup: ext['x-mcp-group'],
       };
     });
   }
@@ -245,7 +254,15 @@ export class MCPGenerator implements IMCPGenerator {
       JWKS_URI: auth.jwksUri,
       ISSUER: auth.issuer,
       REQUIRED_SCOPES: auth.requiredScopes.join(','),
+      GROUPS_CLAIM: auth.groupsClaim,
       TOOLS_JSON: JSON.stringify(tools, null, 2),
+      // Optional authorization hook wiring (empty when disabled).
+      AUTHZ_HOOK_IMPORT: auth.authzHook
+        ? "import { authorize } from './authz-hook.js';"
+        : '',
+      AUTHZ_HOOK_CALL: auth.authzHook
+        ? 'args = await authorize({ auth, tool, args });'
+        : '',
     };
 
     let rendered = template;

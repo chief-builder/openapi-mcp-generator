@@ -37,6 +37,8 @@ program
   .option('--upstream-auth <mode>', 'Upstream auth: none | env-credential | passthrough', 'env-credential')
   .option('--upstream-base-url <url>', 'Upstream API base URL (defaults to the spec server URL)')
   .option('--allow-token-passthrough', 'Shortcut for --upstream-auth passthrough (discouraged)')
+  .option('--authz-hook', 'Emit a call to a hand-written ./authz-hook.ts before each tool call')
+  .option('--groups-claim <name>', 'Token claim carrying groups (per-tool visibility)', 'groups')
   .action(async (options) => {
     try {
       console.log('Generate command triggered');
@@ -109,6 +111,8 @@ program
         requiredScopes: options.requiredScope || config.serverAuthConfig?.requiredScopes || [],
         upstreamAuth,
         upstreamBaseUrl: options.upstreamBaseUrl || config.serverAuthConfig?.upstreamBaseUrl,
+        authzHook: options.authzHook || config.serverAuthConfig?.authzHook || false,
+        groupsClaim: options.groupsClaim || config.serverAuthConfig?.groupsClaim || 'groups',
       };
 
       if (upstreamAuth === 'passthrough') {

@@ -114,6 +114,20 @@ export interface IServerAuthConfig {
    * Base URL of the upstream API. Defaults to the OpenAPI spec's first server URL.
    */
   upstreamBaseUrl?: string;
+
+  /**
+   * Emit a call to a hand-written `./authz-hook.ts` (`authorize({auth,tool,args})`)
+   * before each upstream call — for cross-cutting per-request authorization such
+   * as data compartment filtering. The hook may throw `{status,message}` or
+   * return (possibly mutated) args.
+   */
+  authzHook?: boolean;
+
+  /**
+   * Token claim carrying the caller's groups (drives per-tool visibility via
+   * `x-mcp-group`). Default `groups`.
+   */
+  groupsClaim?: string;
 }
 
 /**

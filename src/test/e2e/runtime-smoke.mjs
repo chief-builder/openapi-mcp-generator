@@ -56,7 +56,7 @@ try {
   const spec = join(work, 'spec.json');
   writeFileSync(spec, JSON.stringify({
     openapi: '3.0.0', info: { title: 'E2E', version: '1.0.0' }, servers: [{ url: 'https://api.example.com' }],
-    paths: { '/ping': { get: { operationId: 'ping', responses: { '200': { description: 'ok' } } } } },
+    paths: { '/ping': { get: { operationId: 'ping', 'x-mcp-scope': 'mcp:ping:execute', responses: { '200': { description: 'ok' } } } } },
   }));
   const gen = sh('npx', ['ts-node', 'src/cli/index.ts', 'generate', '--spec', spec, '--output', out,
     '--provider', 'stripe', '--name', 'e2e-mcp', '--resource-uri', RESOURCE,
@@ -114,6 +114,18 @@ await c.close();
 `);
   const probe = sh('node', ['probe.mjs'], { cwd: out, env: { ...process.env, TOK: good } });
   check('valid token -> SDK initialize + tools/list', /TOOLS:ping/.test(probe.stdout));
+
+  // 7. per-tool scope: calling `ping` (needs mcp:ping:execute) with a token that
+  //    only has mcp:read -> 403 insufficient_scope naming the required scope.
+  const call = (tok) => post({ authorization: `Bearer ${tok}` },
+    '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"ping","arguments":{}}}');
+  const r7 = await call(good);
+  check('under-scoped tools/call -> 403 insufficient_scope',
+    r7.status === 403 && /scope="mcp:ping:execute"/.test(r7.headers.get('www-authenticate') || ''));
+
+  // 8. step-up: a token carrying the required scope is accepted (not 403).
+  const stepUp = await mint(RESOURCE, 'mcp:read mcp:ping:execute');
+  check('stepped-up tools/call -> not 403', (await call(stepUp)).status !== 403);
 } finally {
   if (server) server.kill();
   if (jwks) jwks.close();

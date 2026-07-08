@@ -85,11 +85,9 @@ export function createTokenVerifier(config: ResourceServerConfig): OAuthTokenVer
         scopes,
         expiresAt: payload.exp,
         resource: new URL(config.resourceUri),
-        extra: {
-          sub: payload.sub,
-          idp_origin: payload.idp_origin,
-          mcp_tier: payload.mcp_tier,
-        },
+        // The full validated claim set — servers read groups / fhir_patient /
+        // idp_origin etc. by name (claim names are configurable per deployment).
+        extra: { ...payload },
       };
     },
   };

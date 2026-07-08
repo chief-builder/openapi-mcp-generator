@@ -22,21 +22,24 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js';
 import { metadataHandler } from '@modelcontextprotocol/sdk/server/auth/handlers/metadata.js';
+import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
 import {
   buildProtectedResourceMetadata,
   createTokenVerifier,
   type ResourceServerConfig,
 } from './oauth-resource-server.js';
+%%AUTHZ_HOOK_IMPORT%%
 
 // --- generation-time configuration (overridable via environment) -------------
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = parseInt(process.env.PORT || '%%HTTP_PORT%%', 10);
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://${HOST}:${PORT}`;
 const UPSTREAM_BASE_URL = process.env.UPSTREAM_BASE_URL || '%%BASE_URL%%';
-const UPSTREAM_AUTH_MODE = '%%UPSTREAM_AUTH_MODE%%'; // none | env-credential | passthrough
+const UPSTREAM_AUTH_MODE: string = '%%UPSTREAM_AUTH_MODE%%'; // none | env-credential | passthrough
 
 const REQUIRED_SCOPES = (process.env.MCP_REQUIRED_SCOPES ?? '%%REQUIRED_SCOPES%%')
   .split(',').map((s) => s.trim()).filter(Boolean);
+const GROUPS_CLAIM = '%%GROUPS_CLAIM%%'; // token claim carrying the caller's groups
 const RESOURCE_CONFIG: ResourceServerConfig = {
   resourceUri: process.env.MCP_RESOURCE_URI || '%%RESOURCE_URI%%',
   authorizationServers: (process.env.MCP_AUTHORIZATION_SERVERS || '%%AUTH_SERVERS%%')
@@ -60,8 +63,20 @@ interface ToolDescriptor {
   pathParams: string[];
   queryParams: string[];
   bodyParams: string[];
+  requiredScope?: string;
+  requiredGroup?: string;
 }
 const TOOLS: ToolDescriptor[] = %%TOOLS_JSON%%;
+const TOOLS_BY_NAME = new Map(TOOLS.map((t) => [t.name, t]));
+
+function tokenGroups(auth?: AuthInfo): string[] {
+  const g = (auth?.extra as any)?.[GROUPS_CLAIM];
+  return Array.isArray(g) ? g : typeof g === 'string' ? [g] : [];
+}
+// Visibility: a caller sees a tool only if its required group (if any) is held.
+function toolVisible(tool: ToolDescriptor, auth?: AuthInfo): boolean {
+  return !tool.requiredGroup || tokenGroups(auth).includes(tool.requiredGroup);
+}
 
 // --- JSON Schema (per-tool inputSchema) -> Zod raw shape ---------------------
 function jsonSchemaToZod(schema: any): ZodTypeAny {
@@ -137,9 +152,12 @@ async function callUpstream(tool: ToolDescriptor, args: Record<string, any>, cal
 }
 
 // --- MCP server (fresh per request; stateless) -------------------------------
-function buildMcpServer(callerToken?: string): McpServer {
+// Only tools visible to this caller's groups are registered, so tools/list
+// returns exactly the role-permitted set.
+function buildMcpServer(auth?: AuthInfo): McpServer {
   const server = new McpServer({ name: '%%SERVER_NAME%%', version: '%%SERVER_VERSION%%' });
   for (const tool of TOOLS) {
+    if (!toolVisible(tool, auth)) continue;
     server.registerTool(
       tool.name,
       {
@@ -149,7 +167,10 @@ function buildMcpServer(callerToken?: string): McpServer {
         annotations: tool.annotations as any,
       },
       async (args: Record<string, any>) => {
-        const result = await callUpstream(tool, args, callerToken);
+        // Optional per-request authorization hook (e.g. data compartment filter);
+        // may throw {status,message} or return mutated args.
+        %%AUTHZ_HOOK_CALL%%
+        const result = await callUpstream(tool, args, auth?.token);
         return {
           content: [{ type: 'text' as const, text: JSON.stringify(result.data, null, 2) }],
           isError: !result.ok,
@@ -204,10 +225,28 @@ export function createApp() {
     resourceMetadataUrl,
   });
 
-  // Stateless MCP endpoint: authenticate, then a fresh server+transport per request.
-  app.post('/mcp', bearer, async (req: Request, res: Response) => {
+  // Per-tool scope enforcement (draft-spec step-up). For a tools/call, the tool's
+  // `x-mcp-scope` must be held; otherwise a single-shot 403 insufficient_scope
+  // names the required scope so the client can step up and retry.
+  function enforceToolScope(req: Request, res: Response, next: NextFunction): void {
+    const body = req.body;
+    if (!body || body.method !== 'tools/call') return next();
+    const tool = TOOLS_BY_NAME.get(body?.params?.name);
+    if (!tool || !tool.requiredScope) return next();
+    const scopes = req.auth?.scopes || [];
+    if (scopes.includes(tool.requiredScope)) return next();
+    res
+      .status(403)
+      .set('WWW-Authenticate',
+        `Bearer error="insufficient_scope", scope="${tool.requiredScope}", resource_metadata="${resourceMetadataUrl}"`)
+      .json({ error: 'insufficient_scope', scope: tool.requiredScope });
+  }
+
+  // Stateless MCP endpoint: authenticate, enforce tool scope, then a fresh
+  // server+transport per request.
+  app.post('/mcp', bearer, enforceToolScope, async (req: Request, res: Response) => {
     const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-    const server = buildMcpServer(req.auth?.token);
+    const server = buildMcpServer(req.auth);
     res.on('close', () => { transport.close(); server.close(); });
     await server.connect(transport);
     await transport.handleRequest(req, res, req.body);
