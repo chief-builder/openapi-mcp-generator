@@ -231,11 +231,19 @@ Run the generated-server runtime smoke test:
 npm run test:e2e
 ```
 
+Run the local red-team harness:
+
+```bash
+npm run test:red-team
+```
+
 Run linting:
 
 ```bash
 npm run lint
 ```
+
+See [Red Team Weekend](./docs/RED-TEAM-WEEKEND.md) for the manual weekend runbook, [Red Team Findings](./docs/red-team-findings.md) for the latest verified baseline, and [Red Team Weekend Report](./docs/red-team-weekend-report.html) for a standalone explanation of the process, results, and project value.
 
 ## Repository Layout
 
