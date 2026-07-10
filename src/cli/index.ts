@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /**
  * Command Line Interface for OpenAPI MCP Generator
  */
@@ -24,9 +26,13 @@ program
   .description('Generate an MCP server from an OpenAPI specification')
   .requiredOption('-s, --spec <path>', 'Path to OpenAPI specification')
   .requiredOption('-o, --output <dir>', 'Output directory')
-  .option('-p, --provider <name>', 'Provider name', 'stripe')
+  .option(
+    '-p, --provider <name>',
+    'Provider name (generic is supported; stripe and paypal are experimental)',
+    'generic'
+  )
   .option('-n, --name <name>', 'Server name')
-  .option('-v, --version <version>', 'Server version', '1.0.0')
+  .option('-v, --version <version>', 'Server version')
   .option('-d, --description <description>', 'Server description')
   .option('-c, --config <path>', 'Configuration file')
   .option('--resource-uri <uri>', 'Canonical MCP server URI = required token audience (RFC 8707)')
@@ -34,11 +40,11 @@ program
   .option('--jwks-uri <url>', 'JWKS URL for token signature validation')
   .option('--issuer <url>', 'Expected token issuer (defaults to the first --auth-server)')
   .option('--required-scope <scope...>', 'Scope(s) the server requires (enforced -> 403)')
-  .option('--upstream-auth <mode>', 'Upstream auth: none | env-credential | passthrough', 'env-credential')
+  .option('--upstream-auth <mode>', 'Upstream auth: none | env-credential | passthrough')
   .option('--upstream-base-url <url>', 'Upstream API base URL (defaults to the spec server URL)')
   .option('--allow-token-passthrough', 'Shortcut for --upstream-auth passthrough (discouraged)')
   .option('--authz-hook', 'Emit a call to a hand-written ./authz-hook.ts before each tool call')
-  .option('--groups-claim <name>', 'Token claim carrying groups (per-tool visibility)', 'groups')
+  .option('--groups-claim <name>', 'Token claim carrying groups (per-tool visibility)')
   .action(async (options) => {
     try {
       console.log('Generate command triggered');
@@ -100,6 +106,11 @@ program
       const upstreamAuth = options.allowTokenPassthrough
         ? 'passthrough'
         : (options.upstreamAuth || config.serverAuthConfig?.upstreamAuth || 'env-credential');
+      if (!['none', 'env-credential', 'passthrough'].includes(upstreamAuth)) {
+        throw new Error(
+          `Invalid upstream auth mode "${upstreamAuth}". Expected none, env-credential, or passthrough.`
+        );
+      }
       const serverAuthConfig = {
         resourceUri:
           options.resourceUri ||
@@ -186,11 +197,16 @@ program
 // Add the stripe-test command
 program
   .command('stripe-test')
-  .description('Run a test with Stripe OpenAPI specification')
+  .description('Run an experimental test with a Stripe OpenAPI specification')
   .option('-s, --spec <path>', 'Path to Stripe OpenAPI specification')
   .option('-o, --output <dir>', 'Output directory', './output/stripe-mcp-server')
   .action(async (options) => {
     try {
+      console.warn(
+        'WARNING: the Stripe provider is experimental and does not fully support ' +
+        'form or multipart request serialization.'
+      );
+
       // Use a default spec path if not provided
       const specPath = options.spec || path.resolve(process.cwd(), 'specs/stripe/openapi/spec3.json');
       
@@ -220,11 +236,15 @@ program
     }
   });
 
-// Parse command line arguments
-program.parse();
-
 const cli = {
-  run: () => program.parse(process.argv)
+  run: (argv: string[] = process.argv) => program.parseAsync(argv)
 };
+
+if (require.main === module) {
+  void cli.run().catch((error) => {
+    console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  });
+}
 
 export default cli;

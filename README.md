@@ -90,7 +90,7 @@ Common options:
 |---|---:|---|
 | `--spec <path>` | required | OpenAPI 3 JSON file. YAML parsing is not implemented. |
 | `--output <dir>` | required | Directory for the generated server project. |
-| `--provider <name>` | `stripe` | Registered provider: `generic`, `stripe`, or `paypal`. |
+| `--provider <name>` | `generic` | Supported provider: `generic`. Experimental providers: `stripe`, `paypal`. |
 | `--name <name>` | derived from spec title | Generated server/package name. |
 | `--version <version>` | `1.0.0` | Generated server version. |
 | `--description <text>` | derived from spec title | Generated server description. |
@@ -112,7 +112,7 @@ Provider listing:
 npm run list-providers
 ```
 
-Stripe shortcut:
+Experimental Stripe shortcut:
 
 ```bash
 npm run dev -- stripe-test --output ./output/stripe-mcp
@@ -162,13 +162,15 @@ Providers do two jobs:
 
 The actual server implementation is generated centrally from shared templates. Provider-specific server template trees are no longer used.
 
-Registered providers:
+Provider status:
 
-| Provider | Use case | Notes |
-|---|---|---|
-| `generic` | Arbitrary OpenAPI specs | Uses base parsing and operation IDs as the naming source. |
-| `stripe` | Stripe OpenAPI specs | Adds Stripe naming and tool annotations. |
-| `paypal` | PayPal OpenAPI specs | Adds PayPal path-derived operation IDs and naming. |
+| Provider | Status | Use case | Notes |
+|---|---|---|---|
+| `generic` | Supported | Arbitrary OpenAPI specs | Uses base parsing and operation IDs as the naming source, subject to the OpenAPI limitations below. |
+| `stripe` | Experimental | Stripe OpenAPI specs | Naming and annotations are implemented, but form and multipart request serialization is incomplete. Do not use for production integrations. |
+| `paypal` | Experimental | PayPal OpenAPI specs | Naming is implemented, but referenced parameters and request bodies are not fully resolved. Do not use for production integrations. |
+
+Experimental providers are retained for development and compatibility testing. They are not part of the supported provider surface and may generate incomplete upstream requests.
 
 To add a provider:
 
@@ -196,7 +198,7 @@ export class MyProvider extends BaseProvider {
 
 ## OpenAPI Support
 
-Currently supported:
+Currently supported by the generic provider:
 
 - OpenAPI 3.x documents.
 - JSON input files.

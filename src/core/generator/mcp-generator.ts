@@ -86,6 +86,11 @@ export class MCPGenerator implements IMCPGenerator {
       await this.emitCoreFile('oauth-resource-server.ts.template', path.join(srcDir, 'oauth-resource-server.ts'));
       generatedFiles.push('src/oauth-resource-server.ts');
 
+      if (config.serverAuthConfig?.authzHook) {
+        await this.emitCoreFile('authz-hook.ts.template', path.join(srcDir, 'authz-hook.ts'));
+        generatedFiles.push('src/authz-hook.ts');
+      }
+
       // Shared SDK-based, stateless MCP server driven by the tool descriptors
       const tools = this.buildToolDescriptors(spec, provider);
       await this.emitSharedServer(config, spec, tools, path.join(srcDir, 'mcp-server.ts'));
@@ -244,17 +249,17 @@ export class MCPGenerator implements IMCPGenerator {
     const template = await TemplateLoader.loadTemplate(TemplateLoader.getCoreTemplatePath('mcp-server.ts.template'));
 
     const replacements: Record<string, string> = {
-      SERVER_NAME: config.serverName,
-      SERVER_VERSION: config.serverVersion,
-      HTTP_PORT: String(config.httpPort || 3000),
-      BASE_URL: baseUrl,
-      UPSTREAM_AUTH_MODE: auth.upstreamAuth,
-      RESOURCE_URI: auth.resourceUri,
-      AUTH_SERVERS: auth.authorizationServers.join(','),
-      JWKS_URI: auth.jwksUri,
-      ISSUER: auth.issuer,
-      REQUIRED_SCOPES: auth.requiredScopes.join(','),
-      GROUPS_CLAIM: auth.groupsClaim,
+      SERVER_NAME_LITERAL: JSON.stringify(config.serverName),
+      SERVER_VERSION_LITERAL: JSON.stringify(config.serverVersion),
+      HTTP_PORT_LITERAL: JSON.stringify(String(config.httpPort || 3000)),
+      BASE_URL_LITERAL: JSON.stringify(baseUrl),
+      UPSTREAM_AUTH_MODE_LITERAL: JSON.stringify(auth.upstreamAuth),
+      RESOURCE_URI_LITERAL: JSON.stringify(auth.resourceUri),
+      AUTH_SERVERS_LITERAL: JSON.stringify(auth.authorizationServers.join(',')),
+      JWKS_URI_LITERAL: JSON.stringify(auth.jwksUri),
+      ISSUER_LITERAL: JSON.stringify(auth.issuer),
+      REQUIRED_SCOPES_LITERAL: JSON.stringify(auth.requiredScopes.join(',')),
+      GROUPS_CLAIM_LITERAL: JSON.stringify(auth.groupsClaim),
       TOOLS_JSON: JSON.stringify(tools, null, 2),
       // Optional authorization hook wiring (empty when disabled).
       AUTHZ_HOOK_IMPORT: auth.authzHook
@@ -291,27 +296,22 @@ export class MCPGenerator implements IMCPGenerator {
    */
   private async generatePackageJson(config: IGeneratorConfig): Promise<void> {
     const templatePath = TemplateLoader.getCoreTemplatePath('package.json.template');
-    const variables = {
-      serverName: config.serverName,
-      serverVersion: config.serverVersion,
-      serverDescription: config.serverDescription || 'MCP server generated from OpenAPI specification'
-    };
-    
-    let packageJsonContent = await TemplateLoader.loadAndRenderTemplate(templatePath, variables);
+    const packageJson = JSON.parse(await TemplateLoader.loadTemplate(templatePath));
+    packageJson.name = config.serverName;
+    packageJson.version = config.serverVersion;
+    packageJson.description = config.serverDescription || 'MCP server generated from OpenAPI specification';
     
     // Apply any provider-specific additions if available
     if (config.providerConfig?.dependencies) {
-      const packageJson = JSON.parse(packageJsonContent);
       packageJson.dependencies = {
         ...packageJson.dependencies,
         ...config.providerConfig.dependencies
       };
-      packageJsonContent = JSON.stringify(packageJson, null, 2);
     }
     
     await fs.writeFile(
       path.join(config.outputDir, 'package.json'),
-      packageJsonContent
+      `${JSON.stringify(packageJson, null, 2)}\n`
     );
   }
     

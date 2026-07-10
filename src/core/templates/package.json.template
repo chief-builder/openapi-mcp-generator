@@ -1,13 +1,10 @@
 {
-  "name": "${serverName}",
-  "version": "${serverVersion}",
-  "description": "${serverDescription}",
+  "name": "",
+  "version": "0.0.0",
+  "description": "",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "bin": {
-    "${serverName}": "dist/cli.js"
-  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

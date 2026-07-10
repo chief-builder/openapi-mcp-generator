@@ -7,6 +7,7 @@
 import * as os from 'os';
 import * as path from 'path';
 import * as fs from 'fs-extra';
+import * as ts from 'typescript';
 import { MCPGenerator } from '../core/generator/mcp-generator';
 import { StripeProvider } from '../providers/stripe/provider';
 import { TemplateLoader } from '../core/utils/template-loader';
@@ -73,6 +74,7 @@ describe('generated server shape', () => {
     expect(pkg.dependencies.zod).toBeDefined();
     expect(pkg.dependencies.express).toBeDefined();
     expect(pkg.dependencies.stripe).toBeUndefined();
+    expect(pkg.bin).toBeUndefined();
   });
 
   test('uses SDK McpServer over Streamable HTTP in stateless mode', () => {
@@ -87,11 +89,11 @@ describe('generated server shape', () => {
     expect(server).toContain('resourceMetadataUrl');
     // Audience binding (RFC 8707): token aud must equal this server's resource URI.
     expect(oauth).toContain('audience: config.resourceUri');
-    expect(server).toContain("resourceUri: process.env.MCP_RESOURCE_URI || 'https://mcp.example.com/mcp'");
+    expect(server).toContain('resourceUri: process.env.MCP_RESOURCE_URI || "https://mcp.example.com/mcp"');
   });
 
   test('does NOT pass the caller token upstream by default (confused-deputy fix)', () => {
-    expect(server).toContain("UPSTREAM_AUTH_MODE: string = 'env-credential'");
+    expect(server).toContain('UPSTREAM_AUTH_MODE: string = "env-credential"');
     // passthrough must be an explicit, guarded branch — never the default.
     expect(server).toContain("UPSTREAM_AUTH_MODE === 'passthrough'");
   });
@@ -178,5 +180,56 @@ describe('generated server authorization (per-tool scope/group + hook)', () => {
   test('wires the optional authorization hook', () => {
     expect(server).toContain("import { authorize } from './authz-hook.js'");
     expect(server).toContain('args = await authorize({ auth, tool, args })');
+    expect(fs.existsSync(path.join(outDir, 'src', 'authz-hook.ts'))).toBe(true);
+  });
+});
+
+describe('safe generated literals', () => {
+  let outDir: string;
+
+  beforeAll(async () => {
+    TemplateLoader.setTestMode(false);
+    TemplateLoader.clearCache();
+    outDir = await fs.mkdtemp(path.join(os.tmpdir(), 'mcp-literals-'));
+  });
+
+  afterAll(async () => {
+    TemplateLoader.setTestMode(true);
+    if (outDir) await fs.remove(outDir);
+  });
+
+  test('escapes values from config and the OpenAPI document as data', async () => {
+    const provider = new StripeProvider();
+    const spec = provider.parseOpenAPISpec({
+      ...RAW_SPEC,
+      servers: [{ url: "https://api.example.com/o'clock?value=${literal}" }],
+    });
+    const result = await new MCPGenerator().generate(spec, provider, {
+      serverName: 'literal-safe-server',
+      serverVersion: '1.0.0"quoted',
+      serverDescription: 'Line one\n"quoted" and \\ escaped',
+      outputDir: outDir,
+      serverAuthConfig: {
+        resourceUri: "urn:mcp:o'clock",
+        authorizationServers: ["https://auth.example.com/o'clock"],
+        groupsClaim: "team'name",
+      },
+    });
+
+    expect(result.success).toBe(true);
+    const pkg = JSON.parse(await fs.readFile(path.join(outDir, 'package.json'), 'utf8'));
+    expect(pkg.description).toBe('Line one\n"quoted" and \\ escaped');
+
+    const generated = await fs.readFile(path.join(outDir, 'src', 'mcp-server.ts'), 'utf8');
+    const transpiled = ts.transpileModule(generated, {
+      compilerOptions: { module: ts.ModuleKind.NodeNext, target: ts.ScriptTarget.ES2022 },
+      reportDiagnostics: true,
+    });
+    const errors = (transpiled.diagnostics || []).filter(
+      (diagnostic) => diagnostic.category === ts.DiagnosticCategory.Error
+    );
+    expect(errors).toEqual([]);
+    expect(generated).toContain(JSON.stringify("https://api.example.com/o'clock?value=${literal}"));
+    expect(generated).toContain(JSON.stringify("urn:mcp:o'clock"));
   });
 });

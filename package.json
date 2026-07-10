@@ -7,8 +7,14 @@
   "bin": {
     "openapi-mcp-generator": "dist/cli/index.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "build": "npx tsc",
+    "build": "node scripts/clean-dist.js && npx tsc && node scripts/copy-templates.js",
+    "prepack": "npm run build",
     "start": "ts-node src/cli/index.ts",
     "dev": "ts-node src/cli/index.ts",
     "test:integration": "jest src/test/integration --forceExit",
@@ -27,7 +33,7 @@
     "mcp",
     "model-context-protocol",
     "generator",
-    "stripe",
+    "code-generation",
     "ai",
     "claude",
     "ai-assistant"

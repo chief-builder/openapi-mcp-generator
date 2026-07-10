@@ -24,7 +24,7 @@ import { IHandlerGenerationOptions } from '../../core/models/generator-types';
 export class PayPalProvider implements IProvider {
   readonly name = 'paypal';
   readonly version = '1.0.0';
-  readonly description = 'PayPal API provider for MCP generator';
+  readonly description = 'Experimental PayPal provider (incomplete OpenAPI reference resolution)';
   
 /**
  * Parse an OpenAPI specification with PayPal-specific logic

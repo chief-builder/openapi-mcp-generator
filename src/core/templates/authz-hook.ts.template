@@ -1,0 +1,21 @@
+import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js';
+
+export interface AuthorizationContext {
+  auth?: AuthInfo;
+  tool: {
+    name: string;
+    method: string;
+    path: string;
+  };
+  args: Record<string, any>;
+}
+
+/**
+ * Customize this hook to enforce application-specific authorization or to
+ * constrain arguments. Throw to reject a call; return the permitted arguments.
+ */
+export async function authorize(
+  context: AuthorizationContext,
+): Promise<Record<string, any>> {
+  return context.args;
+}

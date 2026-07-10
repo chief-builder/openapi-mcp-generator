@@ -60,7 +60,7 @@ try {
   }));
   const gen = sh('npx', ['ts-node', 'src/cli/index.ts', 'generate', '--spec', spec, '--output', out,
     '--provider', 'stripe', '--name', 'e2e-mcp', '--resource-uri', RESOURCE,
-    '--auth-server', ISSUER, '--jwks-uri', `${ISSUER}/certs`], { cwd: REPO });
+    '--auth-server', ISSUER, '--jwks-uri', `${ISSUER}/certs`, '--authz-hook'], { cwd: REPO });
   if (gen.status !== 0) { console.error(gen.stderr); throw new Error('generation failed'); }
   if (sh('npm', ['install'], { cwd: out }).status !== 0) throw new Error('npm install failed');
   const build = sh('npm', ['run', 'build'], { cwd: out });

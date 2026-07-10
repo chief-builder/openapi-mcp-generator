@@ -1,5 +1,5 @@
 /**
- * %%SERVER_NAME%% — MCP server generated from an OpenAPI specification.
+ * MCP server generated from an OpenAPI specification.
  *
  * Built on the official @modelcontextprotocol/sdk. Transport is Streamable HTTP
  * in STATELESS mode (a fresh server + transport per request, no sessions) — the
@@ -32,20 +32,22 @@ import {
 
 // --- generation-time configuration (overridable via environment) -------------
 const HOST = process.env.HOST || '127.0.0.1';
-const PORT = parseInt(process.env.PORT || '%%HTTP_PORT%%', 10);
+const SERVER_NAME = %%SERVER_NAME_LITERAL%%;
+const SERVER_VERSION = %%SERVER_VERSION_LITERAL%%;
+const PORT = parseInt(process.env.PORT || %%HTTP_PORT_LITERAL%%, 10);
 const PUBLIC_BASE_URL = process.env.PUBLIC_BASE_URL || `http://${HOST}:${PORT}`;
-const UPSTREAM_BASE_URL = process.env.UPSTREAM_BASE_URL || '%%BASE_URL%%';
-const UPSTREAM_AUTH_MODE: string = '%%UPSTREAM_AUTH_MODE%%'; // none | env-credential | passthrough
+const UPSTREAM_BASE_URL = process.env.UPSTREAM_BASE_URL || %%BASE_URL_LITERAL%%;
+const UPSTREAM_AUTH_MODE: string = %%UPSTREAM_AUTH_MODE_LITERAL%%; // none | env-credential | passthrough
 
-const REQUIRED_SCOPES = (process.env.MCP_REQUIRED_SCOPES ?? '%%REQUIRED_SCOPES%%')
+const REQUIRED_SCOPES = (process.env.MCP_REQUIRED_SCOPES ?? %%REQUIRED_SCOPES_LITERAL%%)
   .split(',').map((s) => s.trim()).filter(Boolean);
-const GROUPS_CLAIM = '%%GROUPS_CLAIM%%'; // token claim carrying the caller's groups
+const GROUPS_CLAIM = %%GROUPS_CLAIM_LITERAL%%; // token claim carrying the caller's groups
 const RESOURCE_CONFIG: ResourceServerConfig = {
-  resourceUri: process.env.MCP_RESOURCE_URI || '%%RESOURCE_URI%%',
-  authorizationServers: (process.env.MCP_AUTHORIZATION_SERVERS || '%%AUTH_SERVERS%%')
+  resourceUri: process.env.MCP_RESOURCE_URI || %%RESOURCE_URI_LITERAL%%,
+  authorizationServers: (process.env.MCP_AUTHORIZATION_SERVERS || %%AUTH_SERVERS_LITERAL%%)
     .split(',').map((s) => s.trim()).filter(Boolean),
-  jwksUri: process.env.MCP_JWKS_URI || '%%JWKS_URI%%',
-  issuer: process.env.MCP_ISSUER || '%%ISSUER%%' || undefined,
+  jwksUri: process.env.MCP_JWKS_URI || %%JWKS_URI_LITERAL%%,
+  issuer: process.env.MCP_ISSUER || %%ISSUER_LITERAL%% || undefined,
   scopesSupported: REQUIRED_SCOPES,
 };
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
@@ -155,7 +157,7 @@ async function callUpstream(tool: ToolDescriptor, args: Record<string, any>, cal
 // Only tools visible to this caller's groups are registered, so tools/list
 // returns exactly the role-permitted set.
 function buildMcpServer(auth?: AuthInfo): McpServer {
-  const server = new McpServer({ name: '%%SERVER_NAME%%', version: '%%SERVER_VERSION%%' });
+  const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION });
   for (const tool of TOOLS) {
     if (!toolVisible(tool, auth)) continue;
     server.registerTool(
@@ -265,6 +267,6 @@ export function startServer(): void {
   const app = createApp();
   app.listen(PORT, HOST, () => {
     // eslint-disable-next-line no-console
-    console.error(`%%SERVER_NAME%% listening on http://${HOST}:${PORT}/mcp (resource ${RESOURCE_CONFIG.resourceUri})`);
+    console.error(`${SERVER_NAME} listening on http://${HOST}:${PORT}/mcp (resource ${RESOURCE_CONFIG.resourceUri})`);
   });
 }

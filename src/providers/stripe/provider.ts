@@ -29,7 +29,7 @@ import {
 export class StripeProvider implements IProvider {
   readonly name = 'stripe';
   readonly version = '1.0.0';
-  readonly description = 'Stripe API provider for MCP generator';
+  readonly description = 'Experimental Stripe provider (incomplete OpenAPI request encoding support)';
   
   /**
    * Parse an OpenAPI specification with Stripe-specific logic
