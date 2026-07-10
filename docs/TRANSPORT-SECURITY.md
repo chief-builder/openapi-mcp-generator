@@ -88,6 +88,8 @@ OpenAPI operation extensions are carried into generated tool descriptors:
 
 `x-mcp-group` controls visibility. Tools with a required group are only registered for callers whose validated token contains that group in the configured groups claim. The claim defaults to `groups` and can be changed at generation time with `--groups-claim`.
 
+Use `--authz-hook` when authorization depends on validated claims or argument values beyond scopes and groups. The generator emits `src/authz-hook.ts` with a pass-through implementation; deployments must replace it with their policy and test rejection behavior before relying on it as a control.
+
 ## Upstream Authentication
 
 The generated server separates MCP caller identity from upstream API credentials.

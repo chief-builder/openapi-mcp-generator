@@ -1,44 +1,49 @@
-# Red Team Findings
+# Red-Team Findings
 
-Use this file during a red-team run. Keep confirmed issues separate from probes that behaved correctly.
+Use this file as the run record for the commit currently under review. Replace the placeholders and retain evidence for failures; do not carry an older passing result forward.
 
 ## Run Metadata
 
-- Date: 2026-07-09 19:44:14 EDT
-- Commit: 2bccdf3
-- Operator: Codex
-- Commands:
-  - `npm run build` - passed
-  - `npm test` - passed, 23 suites / 258 tests
-  - `npm run test:e2e` - passed, `e2e: ALL GREEN`
-  - `npm run test:red-team` - passed, `red-team: ALL GREEN`
+- Date and timezone: `<YYYY-MM-DD HH:MM TZ>`
+- Commit: `<full-or-short-sha>`
+- Operator: `<name>`
+- Node.js: `<version>`
+- Platform: `<platform>`
+
+## Command Results
+
+| Command | Result | Notes |
+|---|---|---|
+| `npm run build` | Not run | |
+| `npm test` | Not run | Record suite and test counts. |
+| `npm run test:e2e` | Not run | |
+| `npm run test:red-team` | Not run | |
+| `npm run lint` | Not run | Record warnings separately from errors. |
 
 ## Confirmed Findings
 
-- None from the automated weekend baseline.
+No findings recorded for this run.
 
-## Probes That Passed
+For each finding, record:
 
-- Missing token: rejected with 401.
-- Malformed token: rejected with 401.
-- Expired token: rejected with 401.
-- Wrong issuer: rejected with 401.
-- Wrong audience: rejected with 401.
-- Missing baseline scope: rejected with 403.
-- Disallowed Origin: rejected with 403.
-- External Host: rejected with 421 on loopback bind.
-- Group-hidden tool: hidden from `tools/list` without the required group.
-- Direct hidden-tool call: did not reach upstream.
-- Under-scoped tool call: rejected with `insufficient_scope`.
-- Authorized group and scope: `adminWrite` succeeded.
-- Upstream credential separation: upstream received `UPSTREAM_API_KEY`, not caller bearer token.
-- Oversized JSON body: rejected with 413.
-- Unsupported methods: `GET /mcp` and `DELETE /mcp` rejected with 405.
+- severity and affected area;
+- exact reproduction steps;
+- expected and actual behavior;
+- security or correctness impact;
+- proposed regression-test location;
+- fix status and commit.
 
-## Open Questions
+## Passed Probes
 
-- Manual checklist probes remain available for deeper weekend coverage beyond the automated baseline, especially custom `--groups-claim`, `--authz-hook`, malformed JWKS availability, and non-JSON upstream failure behavior.
+Record only probes executed for this commit. The automated harness covers token validation, baseline and per-tool scopes, group visibility, Host and Origin checks, request-size limits, unsupported methods, and upstream credential separation.
 
-## Report
+## Manual Checks Remaining
 
-- Standalone process and value report: [red-team-weekend-report.html](./red-team-weekend-report.html)
+- `<check or none>`
+
+## Artifacts
+
+- Logs: `<path or link>`
+- Screenshots or traces: `<path or link>`
+
+The [archived HTML report](./red-team-weekend-report.html) is an example from July 2026, not evidence for the current commit.

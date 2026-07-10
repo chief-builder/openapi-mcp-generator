@@ -4,10 +4,10 @@
  * Copy this pattern into a generated server project if you want a small
  * environment preflight before calling the generated startServer() function.
  *
- * The generated project exports startServer from src/index.ts, which re-exports
- * src/mcp-server.ts.
+ * Import mcp-server directly: importing src/index.ts would start the server as
+ * a side effect before this preflight runs.
  */
-import { startServer } from './src/index.js';
+import { startServer } from './src/mcp-server.js';
 
 const REQUIRED_ENV = [
   'MCP_RESOURCE_URI',

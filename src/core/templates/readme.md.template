@@ -19,6 +19,8 @@ It is built on the official `@modelcontextprotocol/sdk`, exposes MCP over statel
     └── oauth-resource-server.ts
 ```
 
+Projects generated with `--authz-hook` also contain `src/authz-hook.ts`. The emitted hook is pass-through starter code; replace it with application policy before relying on it for authorization.
+
 ## Installation
 
 ```bash
@@ -80,6 +82,7 @@ The server validates every MCP request as an OAuth protected resource:
 - Operation-level `x-mcp-scope` is enforced on `tools/call`.
 - Operation-level `x-mcp-group` controls whether a tool appears in `tools/list`.
 - Caller tokens are not forwarded upstream in the default `env-credential` mode.
+- When enabled, `src/authz-hook.ts` can reject a call or constrain its arguments after token validation and before the upstream request.
 
 ## Available Tools
 

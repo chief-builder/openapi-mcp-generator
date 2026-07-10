@@ -31,17 +31,11 @@ npm run test:red-team
 - per-tool `x-mcp-scope` enforcement;
 - upstream credential separation.
 
-## Latest Verified Baseline
+## Recording A Baseline
 
-Last verified on 2026-07-09 at 19:44:14 EDT against commit `2bccdf3`.
+Run all baseline commands against the commit being reviewed, then record the commit, environment, command results, confirmed findings, and unresolved manual checks in [red-team-findings.md](./red-team-findings.md). Do not treat an older report as evidence for the current commit.
 
-- `npm run build` passed.
-- `npm test` passed with 23 test suites and 258 tests.
-- `npm run test:e2e` passed with `e2e: ALL GREEN`.
-- `npm run test:red-team` passed with `red-team: ALL GREEN`.
-- Confirmed findings from the automated baseline: none.
-
-See [red-team-findings.md](./red-team-findings.md) for the probe-level record and [red-team-weekend-report.html](./red-team-weekend-report.html) for the standalone process summary.
+The [HTML report](./red-team-weekend-report.html) is an archived July 2026 snapshot retained as an example of a completed report.
 
 ## Manual Attack Checklist
 

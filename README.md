@@ -16,6 +16,7 @@ Each generated server contains:
 - `src/index.ts` - entry point that starts the server.
 - `src/mcp-server.ts` - SDK-based MCP server, Streamable HTTP transport, tool registration, upstream API routing, and request guards.
 - `src/oauth-resource-server.ts` - Protected Resource Metadata and JWT verification helpers.
+- `src/authz-hook.ts` - optional application authorization hook emitted by `--authz-hook`.
 - `package.json`, `tsconfig.json`, and generated `README.md`.
 
 ![Generated project anatomy](./docs/assets/generated-project-anatomy.png)
@@ -42,7 +43,7 @@ npm install
 npm run build
 ```
 
-List registered providers:
+List available providers and their support status:
 
 ```bash
 npm run list-providers
@@ -97,13 +98,13 @@ Common options:
 | `--config <path>` | none | JSON config file merged with CLI options. |
 | `--resource-uri <uri>` | `urn:mcp:<server-name>` | Canonical MCP resource URI and required JWT audience. |
 | `--auth-server <url...>` | none | Authorization server issuer URL(s) advertised in metadata. |
-| `--jwks-uri <url>` | derived from first auth server when possible | JWKS endpoint used for token verification. |
+| `--jwks-uri <url>` | `<first-auth-server>/protocol/openid-connect/certs` | JWKS endpoint used for token verification. Override this for providers that use a different discovery path. |
 | `--issuer <url>` | first auth server | Expected JWT `iss`. |
 | `--required-scope <scope...>` | none | Baseline scopes enforced by SDK bearer middleware. |
 | `--upstream-auth <mode>` | `env-credential` | `none`, `env-credential`, or `passthrough`. |
 | `--upstream-base-url <url>` | first OpenAPI `servers[0].url` | Runtime upstream API base URL. |
 | `--allow-token-passthrough` | false | Shortcut for `--upstream-auth passthrough`; discouraged. |
-| `--authz-hook` | false | Emit a call to local `./authz-hook.ts` before each tool call. |
+| `--authz-hook` | false | Emit a pass-through `src/authz-hook.ts` starter and call it before each upstream request. |
 | `--groups-claim <name>` | `groups` | JWT claim used by `x-mcp-group` tool visibility. |
 
 Provider listing:
@@ -213,6 +214,15 @@ Current limitations:
 - Request-body routing currently flattens JSON object properties into tool arguments.
 - Non-JSON request bodies are not deeply modeled.
 
+The parser preserves security schemes and response metadata, but generated servers use the OAuth resource-server configuration described above rather than translating arbitrary OpenAPI security schemes into runtime authentication.
+
+## Documentation
+
+- [Documentation index](./docs/README.md)
+- [Transport and deployment security](./docs/TRANSPORT-SECURITY.md)
+- [Red-team runbook](./docs/RED-TEAM-WEEKEND.md)
+- [Red-team findings template](./docs/red-team-findings.md)
+
 ## Testing
 
 Run the test suite:
@@ -245,7 +255,7 @@ Run linting:
 npm run lint
 ```
 
-See [Red Team Weekend](./docs/RED-TEAM-WEEKEND.md) for the manual weekend runbook, [Red Team Findings](./docs/red-team-findings.md) for the latest verified baseline, and [Red Team Weekend Report](./docs/red-team-weekend-report.html) for a standalone explanation of the process, results, and project value.
+The end-to-end and red-team scripts install dependencies for a temporary generated project and may require registry access. See the [red-team runbook](./docs/RED-TEAM-WEEKEND.md) for probe coverage and manual follow-up checks.
 
 ## Repository Layout
 
