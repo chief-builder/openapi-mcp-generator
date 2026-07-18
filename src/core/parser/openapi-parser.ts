@@ -152,6 +152,7 @@ export class OpenAPIParser {
    */
   private parseEndpoints(spec: OpenAPIV3.Document): IParsedEndpoint[] {
     const endpoints: IParsedEndpoint[] = [];
+    const rootSecurity = Array.isArray(spec.security) ? spec.security : undefined;
     
     // Iterate through all paths and methods
     Object.entries(spec.paths).forEach(([path, pathItem]) => {
@@ -193,9 +194,11 @@ export class OpenAPIParser {
           endpoint.requestBody = this.parseRequestBody(operationObj.requestBody);
         }
         
-        // Add security requirements if present
+        // Prefer operation security, then inherit root-level requirements.
         if (operationObj.security) {
           endpoint.security = operationObj.security;
+        } else if (rootSecurity) {
+          endpoint.security = rootSecurity;
         }
         
         endpoints.push(endpoint);
