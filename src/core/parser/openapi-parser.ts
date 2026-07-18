@@ -4,15 +4,16 @@
 
 import * as fs from 'fs-extra';
 import { OpenAPIV3 } from 'openapi-types';
-import { 
-  IParsedEndpoint, 
-  IParsedParameter, 
-  IParsedRequestBody, 
-  IParsedResponse, 
-  IParsedSpec, 
-  IParserOptions 
+import {
+  IParsedEndpoint,
+  IParsedParameter,
+  IParsedRequestBody,
+  IParsedResponse,
+  IParsedSpec,
+  IParserOptions
 } from '../models/parser-types';
 import { IProvider } from '../models/provider';
+import { BaseProvider } from '../models/base-provider';
 
 export class OpenAPIParser {
   private provider: IProvider;
@@ -65,9 +66,15 @@ export class OpenAPIParser {
   public parse(spec: any): IParsedSpec {
     // Validate OpenAPI version
     this.validateSpec(spec);
-    
+
     // If provider has custom parsing logic, use it
-    return this.provider.parseOpenAPISpec(spec);
+    // But use the defaultParse as a fallback if the provider delegates back
+    if (this.provider.parseOpenAPISpec !== BaseProvider.prototype.parseOpenAPISpec) {
+      return this.provider.parseOpenAPISpec(spec);
+    }
+
+    // Use default parsing logic otherwise
+    return this.defaultParse(spec);
   }
 
   /**
@@ -187,7 +194,7 @@ export class OpenAPIParser {
           endpoint.requestBody = this.parseRequestBody(operationObj.requestBody);
         }
         
-        // Add operation security, falling back to root-level requirements
+        // Prefer operation security, then inherit root-level requirements.
         if (operationObj.security) {
           endpoint.security = operationObj.security;
         } else if (rootSecurity) {
@@ -238,54 +245,49 @@ export class OpenAPIParser {
   
   /**
    * Extract OpenAPI extensions
-   * 
+   *
    * @param obj Object to extract extensions from
+   * @param enableCustomExtensions Whether to include custom extensions
    * @returns Object with extensions
    */
-  public extractExtensions(obj: any): { [key: string]: any } {
-    return OpenAPIParser.extractExtensions(obj, Boolean(this.options.customExtensions));
-  }
-
-  public static extractExtensions(obj: any, customExtensions = false): { [key: string]: any } {
+  public static extractExtensions(obj: any, enableCustomExtensions: boolean = false): { [key: string]: any } {
     const extensions: { [key: string]: any } = {};
-    
-    if (!customExtensions) {
-      return extensions;
-    }
-    
+
     Object.entries(obj).forEach(([key, value]) => {
-      if (key.startsWith('x-')) {
+      // MCP authorization extensions are load-bearing (per-tool scope/group), so
+      // always capture them; other x- extensions only when explicitly enabled.
+      if (key.startsWith('x-mcp-') || (enableCustomExtensions && key.startsWith('x-'))) {
         extensions[key] = value;
       }
     });
-    
+
     return extensions;
   }
-  
+
+  /**
+   * Instance method for backward compatibility
+   */
+  public extractExtensions(obj: any): { [key: string]: any } {
+    return OpenAPIParser.extractExtensions(obj, this.options.customExtensions);
+  }
+
   /**
    * Parse parameters from OpenAPI specification
-   * 
+   *
    * @param operationParameters Operation parameters
    * @param pathParameters Path parameters
    * @returns Parsed parameters
    */
-  public parseParameters(
-    operationParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined,
-    pathParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined
-  ): IParsedParameter[] {
-    return OpenAPIParser.parseParameters(operationParameters, pathParameters);
-  }
-
   public static parseParameters(
     operationParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined,
     pathParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined
   ): IParsedParameter[] {
     // Combine path-level and operation-level parameters
     const combinedParams = [
-      ...(pathParameters || []), 
+      ...(pathParameters || []),
       ...(operationParameters || [])
     ];
-    
+
     // Parse each parameter
     return combinedParams.map(param => {
       // Handle reference objects
@@ -299,36 +301,40 @@ export class OpenAPIParser {
           description: 'Reference parameter (not implemented)'
         };
       }
-      
+
       const paramObj = param as OpenAPIV3.ParameterObject;
-      
+
       const parsedParam: IParsedParameter = {
         name: paramObj.name,
         required: paramObj.required || false,
         schema: paramObj.schema || {},
         in: paramObj.in,
       };
-      
+
       if (paramObj.description) {
         parsedParam.description = paramObj.description;
       }
-      
+
       return parsedParam;
     });
   }
-  
+
+  /**
+   * Instance method for backward compatibility
+   */
+  public parseParameters(
+    operationParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined,
+    pathParameters: (OpenAPIV3.ParameterObject | OpenAPIV3.ReferenceObject)[] | undefined
+  ): IParsedParameter[] {
+    return OpenAPIParser.parseParameters(operationParameters, pathParameters);
+  }
+
   /**
    * Parse request body from OpenAPI specification
-   * 
+   *
    * @param requestBody Request body
    * @returns Parsed request body
    */
-  public parseRequestBody(
-    requestBody: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject
-  ): IParsedRequestBody {
-    return OpenAPIParser.parseRequestBody(requestBody);
-  }
-
   public static parseRequestBody(
     requestBody: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject
   ): IParsedRequestBody {
@@ -340,28 +346,33 @@ export class OpenAPIParser {
         content: {}
       };
     }
-    
+
     const requestBodyObj = requestBody as OpenAPIV3.RequestBodyObject;
-    
+
     return {
       required: requestBodyObj.required || false,
       content: requestBodyObj.content || {}
     };
   }
-  
+
+  /**
+   * Instance method for backward compatibility
+   */
+  public parseRequestBody(
+    requestBody: OpenAPIV3.RequestBodyObject | OpenAPIV3.ReferenceObject
+  ): IParsedRequestBody {
+    return OpenAPIParser.parseRequestBody(requestBody);
+  }
+
   /**
    * Parse responses from OpenAPI specification
-   * 
+   *
    * @param responses Responses
    * @returns Parsed responses
    */
-  public parseResponses(responses: OpenAPIV3.ResponsesObject): { [statusCode: string]: IParsedResponse } {
-    return OpenAPIParser.parseResponses(responses);
-  }
-
   public static parseResponses(responses: OpenAPIV3.ResponsesObject): { [statusCode: string]: IParsedResponse } {
     const parsedResponses: { [statusCode: string]: IParsedResponse } = {};
-    
+
     Object.entries(responses).forEach(([statusCode, response]) => {
       // Handle reference objects
       if ('$ref' in response) {
@@ -371,16 +382,23 @@ export class OpenAPIParser {
         };
         return;
       }
-      
+
       const responseObj = response as OpenAPIV3.ResponseObject;
-      
+
       parsedResponses[statusCode] = {
         description: responseObj.description || '',
         content: responseObj.content
       };
     });
-    
+
     return parsedResponses;
+  }
+
+  /**
+   * Instance method for backward compatibility
+   */
+  public parseResponses(responses: OpenAPIV3.ResponsesObject): { [statusCode: string]: IParsedResponse } {
+    return OpenAPIParser.parseResponses(responses);
   }
   
   /**
@@ -399,30 +417,40 @@ export class OpenAPIParser {
   
   /**
    * Check if a string is a valid HTTP method
-   * 
+   *
    * @param method HTTP method
    * @returns Whether the method is valid
+   */
+  public static isHttpMethod(method: string): boolean {
+    return ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'].includes(method.toLowerCase());
+  }
+
+  /**
+   * Instance method for backward compatibility
    */
   public isHttpMethod(method: string): boolean {
     return OpenAPIParser.isHttpMethod(method);
   }
 
-  public static isHttpMethod(method: string): boolean {
-    return ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'].includes(method.toLowerCase());
-  }
-  
   /**
    * Convert a path to a method name
-   * 
+   *
    * @param path Path
    * @returns Method name
    */
-  private pathToMethodName(path: string): string {
+  public static pathToMethodName(path: string): string {
     return path
       .split('/')
       .filter(Boolean)
       .map(segment => segment.replace(/[^a-zA-Z0-9]/g, ''))
       .map(segment => segment.charAt(0).toUpperCase() + segment.slice(1))
       .join('');
+  }
+
+  /**
+   * Instance method for backward compatibility
+   */
+  public pathToMethodName(path: string): string {
+    return OpenAPIParser.pathToMethodName(path);
   }
 }

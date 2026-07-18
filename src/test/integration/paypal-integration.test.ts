@@ -77,7 +77,7 @@ describe('PayPal Integration', () => {
     const parsedSpec = await parser.parseFromFile(config.testSpecPath);
     
     expect(parsedSpec).toBeDefined();
-    expect(parsedSpec.title).toBe('PayPal API');
+    expect(parsedSpec.title).toBe('Orders');
     
     // 2. Generate MCP server
     const generator = new MCPGenerator();

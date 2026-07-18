@@ -1,63 +1,35 @@
-# Functional Testing for Generated MCP Servers
+# Generated Server Testing
 
-This directory contains functional tests for the generated MCP servers. These tests build, run, and test the generated servers to ensure they work correctly.
+The project uses three test layers for generated MCP servers.
 
-## Running the Tests
+## Unit And Integration Tests
 
-To run the functional test for the Stripe MCP server:
-
-1. First, generate the server:
-   ```bash
-   npm run test:stripe
-   ```
-
-2. Then run the functional test:
-   ```bash
-   npm run test:functional
-   ```
-
-## Test Steps
-
-The functional test performs the following steps:
-
-1. **Install Dependencies**: Installs all required dependencies for the generated server.
-2. **Build the Server**: Compiles the TypeScript code to JavaScript.
-3. **Start the Server**: Starts the server in a child process.
-4. **Test the Server**: Sends test requests to the server to verify functionality.
-5. **Stop the Server**: Gracefully terminates the server process.
-
-## Test Checks
-
-The test verifies:
-
-- Server info (name, version, description)
-- Available tools (the list should match the expected tools)
-- Server status (should be "ready")
-
-## Environment Variables
-
-You can configure the test with the following environment variables:
-
-- `STRIPE_API_KEY`: Stripe API key to use for testing (default: placeholder test key)
-
-Example:
 ```bash
-STRIPE_API_KEY=sk_test_your_key npm run test:functional
+npm test
 ```
 
-## Adding New Tests
+This runs parser, provider, generator, template, CLI, and generated-source shape tests. It also verifies that the compiled CLI can generate a project from the packaged templates.
 
-To add tests for other API providers:
+To run only integration tests:
 
-1. Create a new test file in this directory (e.g., `test-github-server.ts`)
-2. Implement similar steps: install, build, start, test, stop
-3. Add a new script in package.json (e.g., `"test:functional:github": "ts-node src/test/functional/test-github-server.ts"`)
+```bash
+npm run test:integration
+```
 
-## Troubleshooting
+## Runtime Smoke Test
 
-If tests fail:
+```bash
+npm run test:e2e
+```
 
-1. **Server not starting**: Check for errors in the server output.
-2. **Connection refused**: Ensure the port is not already in use.
-3. **Authentication errors**: Verify the API key is valid.
-4. **Missing dependencies**: Ensure all dependencies are installed.
+The runtime test generates a temporary project, installs its dependencies, builds it, starts local JWKS and MCP servers, and verifies authentication, audience and scope enforcement, Origin checks, tool listing, tool calls, and the generated authorization hook.
+
+## Red-Team Harness
+
+```bash
+npm run test:red-team
+```
+
+The red-team harness adds malformed and expired tokens, wrong issuer and audience, hidden-tool access, Host rejection, body limits, unsupported methods, and upstream credential-separation checks. See the [red-team runbook](../../../docs/RED-TEAM-WEEKEND.md) for the full checklist.
+
+Both runtime scripts use temporary directories and local services. They may require registry access when installing dependencies for the generated project. They do not require real Stripe or PayPal credentials.

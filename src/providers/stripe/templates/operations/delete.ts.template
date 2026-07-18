@@ -1,2 +1,0 @@
-      const deleted = await stripe.${resource}.del(params.id);
-      return deleted;

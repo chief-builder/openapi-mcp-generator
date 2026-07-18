@@ -325,36 +325,6 @@ export abstract class BaseProvider implements IProvider {
   }
 
   /**
-   * Create an authentication provider
-   * Provider-specific implementations must implement this
-   */
-  abstract createAuthProvider(config: IAuthProviderConfig): {
-    code: string;
-    name: string;
-    type: string;
-  };
-
-  /**
-   * Generate handlers for operations
-   * Provider-specific implementations must implement this
-   */
-  abstract generateHandlers(operations: IParsedEndpoint[], options: IHandlerGenerationOptions): string;
-
-  /**
-   * Generate server implementation
-   * Provider-specific implementations must implement this
-   */
-  abstract generateServerImplementation(spec: IParsedSpec, config: IProviderConfig): string;
-
-  /**
-   * Generate additional files needed for the server
-   * Provider-specific implementations may override this
-   */
-  generateAdditionalFiles?(spec: IParsedSpec, config: IProviderConfig): Map<string, string> {
-    return new Map<string, string>();
-  }
-
-  /**
    * Define prompts for this API
    * Provider-specific implementations may override this
    */

@@ -2,7 +2,24 @@
 
 ${serverDescription}
 
-This is a Model Context Protocol (MCP) server for the ${apiTitle} API, generated from an OpenAPI specification.
+This is a generated Model Context Protocol (MCP) server for ${apiTitle}.
+
+It is built on the official `@modelcontextprotocol/sdk`, exposes MCP over stateless Streamable HTTP at `POST /mcp`, and runs as an OAuth 2.1 resource server.
+
+## Generated Files
+
+```text
+.
+├── package.json
+├── tsconfig.json
+├── README.md
+└── src
+    ├── index.ts
+    ├── mcp-server.ts
+    └── oauth-resource-server.ts
+```
+
+Projects generated with `--authz-hook` also contain `src/authz-hook.ts`. The emitted hook is pass-through starter code; replace it with application policy before relying on it for authorization.
 
 ## Installation
 
@@ -11,50 +28,81 @@ npm install
 npm run build
 ```
 
-## Usage
-
-### Environment Variables
-
-- `API_KEY`: Your API key (optional if providing in requests)
-- `PORT`: Port to run the server on (default: 8080)
-- `TRANSPORT`: Transport method to use ('http' or 'stdio', default: 'http')
-
-### Starting the Server
+## Start
 
 ```bash
+MCP_RESOURCE_URI=urn:mcp:${serverName} \
+MCP_AUTHORIZATION_SERVERS=https://auth.example.com \
+MCP_JWKS_URI=https://auth.example.com/.well-known/jwks.json \
+UPSTREAM_API_KEY=your_upstream_api_key \
 npm start
 ```
 
-Or with environment variables:
+By default the server listens at:
 
-```bash
-API_KEY=your_api_key PORT=8080 npm start
+```text
+http://127.0.0.1:3000/mcp
 ```
 
-### Using the CLI
+Use `HOST` and `PORT` to override the bind address.
 
-```bash
-# Install globally
-npm install -g .
+## Runtime Environment
 
-# Run the server
-${serverName} --port=8080 --apiKey=your_api_key
-```
+| Variable | Purpose |
+|---|---|
+| `HOST` | Bind host. Defaults to `127.0.0.1`. |
+| `PORT` | Bind port. |
+| `PUBLIC_BASE_URL` | Public server base URL used in OAuth metadata challenges. |
+| `MCP_RESOURCE_URI` | Required JWT audience for this MCP server. |
+| `MCP_AUTHORIZATION_SERVERS` | Comma-separated authorization server issuer URLs. |
+| `MCP_JWKS_URI` | JWKS endpoint for JWT signature verification. |
+| `MCP_ISSUER` | Expected token issuer. |
+| `MCP_REQUIRED_SCOPES` | Comma-separated scopes required for all MCP requests. |
+| `ALLOWED_ORIGINS` | Comma-separated browser origins allowed by the Origin guard. |
+| `UPSTREAM_BASE_URL` | Upstream REST API base URL. |
+| `UPSTREAM_API_KEY` | Separate upstream API credential for `env-credential` mode. |
+
+## MCP Endpoints
+
+| Endpoint | Behavior |
+|---|---|
+| `POST /mcp` | Authenticated MCP Streamable HTTP endpoint. |
+| `GET /.well-known/oauth-protected-resource` | Public Protected Resource Metadata. |
+| `GET /mcp` | Returns method not allowed. |
+| `DELETE /mcp` | Returns method not allowed. |
+
+## Security Model
+
+The server validates every MCP request as an OAuth protected resource:
+
+- JWT signature is verified with `MCP_JWKS_URI`.
+- JWT issuer is checked with `MCP_ISSUER` or the first authorization server.
+- JWT audience must equal `MCP_RESOURCE_URI`.
+- Baseline scopes from `MCP_REQUIRED_SCOPES` are enforced by the SDK bearer middleware.
+- Operation-level `x-mcp-scope` is enforced on `tools/call`.
+- Operation-level `x-mcp-group` controls whether a tool appears in `tools/list`.
+- Caller tokens are not forwarded upstream in the default `env-credential` mode.
+- When enabled, `src/authz-hook.ts` can reject a call or constrain its arguments after token validation and before the upstream request.
 
 ## Available Tools
 
-This MCP server exposes the following API endpoints as MCP tools:
+This server exposes the following OpenAPI operations as MCP tools:
 
 ${toolsList}
 ${toolsExtra}
 
-## Authentication
-
-${authDoc}
-
 ## Example Requests
 
 ${exampleRequests}
+
+## Upstream Authentication
+
+Default mode is `env-credential`, which sends `UPSTREAM_API_KEY` to the upstream API as a bearer token.
+
+Other generated modes:
+
+- `none` sends no upstream authorization header.
+- `passthrough` forwards the caller's bearer token upstream and should only be used when that is the intended resource-server design.
 
 ## License
 

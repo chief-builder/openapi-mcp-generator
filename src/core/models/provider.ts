@@ -99,50 +99,26 @@ export interface IProvider {
   parseOpenAPISpec(spec: any): IParsedSpec;
 
   /**
-   * Create an authentication provider for this API
-   * 
-   * @param config Authentication configuration
-   * @returns Authentication provider code
-   */
-  createAuthProvider(config: IAuthProviderConfig): {
-    code: string;
-    name: string;
-    type: string;
-  };
-
-  /**
-   * Map OpenAPI operations to MCP tools
-   * 
+   * Map OpenAPI operations to MCP tools. This is the provider's contribution to
+   * the shared, SDK-based server: tool names, titles, and annotations. Argument
+   * routing and the OAuth resource-server behaviour are generated centrally.
+   *
    * @param operations OpenAPI operations
    * @returns MCP tools
    */
   mapOperationsToTools(operations: IParsedEndpoint[]): IMCPTool[];
 
   /**
-   * Generate implementation code for operation handlers
-   * 
-   * @param operations OpenAPI operations
-   * @param options Handler generation options
-   * @returns Generated code for handlers
+   * @deprecated Servers are now generated centrally from the shared SDK-based
+   * template (see MCPGenerator). These hooks are retained as optional for
+   * backward compatibility only and are no longer invoked by the generator.
    */
-  generateHandlers(operations: IParsedEndpoint[], options: IHandlerGenerationOptions): string;
-
-  /**
-   * Generate server implementation
-   * 
-   * @param spec Parsed OpenAPI specification
-   * @param config Provider configuration
-   * @returns Generated code for server implementation
-   */
-  generateServerImplementation(spec: IParsedSpec, config: IProviderConfig): string;
-
-  /**
-   * Generate additional files needed for the server
-   * 
-   * @param spec Parsed OpenAPI specification
-   * @param config Provider configuration
-   * @returns Map of filenames to file contents
-   */
+  createAuthProvider?(config: IAuthProviderConfig): { code: string; name: string; type: string };
+  /** @deprecated see createAuthProvider */
+  generateHandlers?(operations: IParsedEndpoint[], options: IHandlerGenerationOptions): string;
+  /** @deprecated see createAuthProvider */
+  generateServerImplementation?(spec: IParsedSpec, config: IProviderConfig): string;
+  /** @deprecated see createAuthProvider */
   generateAdditionalFiles?(spec: IParsedSpec, config: IProviderConfig): Map<string, string>;
 
   /**
